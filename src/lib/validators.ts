@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { CATEGORY_NAMES } from "./constants";
 
 export const submitLinkSchema = z.object({
   url: z.string().url("Please enter a valid URL"),
