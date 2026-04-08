@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Link {
+  id               String      @id @default(cuid())
+  url              String
+  slug             String      @unique
+  title            String?
+  summary          String?
+  thumbnailUrl     String?     @map("thumbnail_url")
+  category         Category    @relation(fields: [categoryId], references: [id])
+  categoryId       String      @map("category_id")
+  contentType      ContentType @default(ARTICLE) @map("content_type")
+  contributorName  String      @map("contributor_name")
+  contributorEmail String      @map("contributor_email")
+  contextNote      String?     @map("context_note")
+  metadata         Json?
+  status           LinkStatus  @default(DRAFT)
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  @@index([contributorEmail])
+  @@index([categoryId])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("links")
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+  links Link[]
+
+  @@map("categories")
+}
+
+enum ContentType {
+  ARTICLE
+  VIDEO
+}
+
+enum LinkStatus {
+  DRAFT
+  PUBLISHED
+}
