@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArticleIcon, VideoIcon } from "@/components/icons/content-type-icons";
+import { ArticleIcon, VideoIcon, PromptIcon } from "@/components/icons/content-type-icons";
 import type { LinkWithCategory } from "@/types";
 
 function timeAgo(date: string | Date): string {
@@ -41,7 +41,11 @@ export function LinkCard({ link, index }: LinkCardProps) {
   }
 
   function handleCardClick() {
-    window.open(link.url, "_blank", "noopener,noreferrer");
+    if (link.url) {
+      window.open(link.url, "_blank", "noopener,noreferrer");
+    } else {
+      window.location.href = `/link/${link.slug}`;
+    }
   }
 
   return (
@@ -52,7 +56,13 @@ export function LinkCard({ link, index }: LinkCardProps) {
       onClick={handleCardClick}
       className="group grid h-full cursor-pointer grid-rows-[auto_1fr_auto] overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10 transition-all hover:ring-foreground/20 hover:shadow-lg"
     >
-      {link.thumbnailUrl ? (
+      {link.contentTypes.includes("PROMPT") && !link.thumbnailUrl ? (
+        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-muted flex items-center justify-center p-4">
+          <pre className="w-full h-full overflow-hidden text-xs font-mono text-foreground/40 leading-relaxed whitespace-pre-wrap select-none">
+            {link.summary}
+          </pre>
+        </div>
+      ) : link.thumbnailUrl ? (
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
           <img
             src={link.thumbnailUrl}
@@ -87,7 +97,7 @@ export function LinkCard({ link, index }: LinkCardProps) {
                 className="shrink-0 text-muted-foreground"
                 title={ct === "VIDEO" ? "Video" : "Article"}
               >
-                {ct === "VIDEO" ? <VideoIcon /> : <ArticleIcon />}
+                {ct === "VIDEO" ? <VideoIcon /> : ct === "PROMPT" ? <PromptIcon /> : <ArticleIcon />}
               </span>
             ))}
           </div>
@@ -101,7 +111,7 @@ export function LinkCard({ link, index }: LinkCardProps) {
           {link.summary}
         </p>
 
-        <div className="mt-auto">
+        <div className="mt-auto flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -110,6 +120,12 @@ export function LinkCard({ link, index }: LinkCardProps) {
           >
             Copy link
           </Button>
+          {(link.promptCount ?? 0) > 0 && (
+            <span className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <PromptIcon className="size-3" />
+              {link.promptCount} {link.promptCount === 1 ? "prompt" : "prompts"}
+            </span>
+          )}
         </div>
       </div>
 

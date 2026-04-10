@@ -1,7 +1,19 @@
 import { z } from "zod";
 
 export const submitLinkSchema = z.object({
-  url: z.string().url("Please enter a valid URL"),
+  url: z.string().url("Please enter a valid URL").optional(),
+  contributorName: z.string().min(1, "Name is required"),
+  contributorEmail: z.string().email("Please enter a valid email"),
+  contextNote: z.string().optional(),
+  prompts: z
+    .array(z.object({ title: z.string().min(1), body: z.string().min(1) }))
+    .optional(),
+});
+
+export const submitPromptSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  body: z.string().min(1, "Prompt body is required"),
+  categorySlugs: z.array(z.string()).min(1, "At least one category required"),
   contributorName: z.string().min(1, "Name is required"),
   contributorEmail: z.string().email("Please enter a valid email"),
   contextNote: z.string().optional(),
@@ -12,7 +24,7 @@ export const publishLinkSchema = z.object({
   summary: z.string().min(1),
   categorySlugs: z.array(z.string()).min(1, "At least one category required"),
   contentTypes: z
-    .array(z.enum(["ARTICLE", "VIDEO"]))
+    .array(z.enum(["ARTICLE", "VIDEO", "PROMPT"]))
     .min(1, "At least one content type required"),
   thumbnailUrl: z.string().url().optional().nullable(),
   contextNote: z.string().optional().nullable(),

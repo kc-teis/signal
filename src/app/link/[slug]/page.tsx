@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { YOUTUBE_REGEX } from "@/lib/constants";
+import type { Prompt } from "@/types";
 
 function extractYouTubeId(url: string): string | null {
   const match = url.match(YOUTUBE_REGEX);
@@ -19,6 +20,28 @@ function formatDate(date: string | Date): string {
     month: "long",
     day: "numeric",
   });
+}
+
+function PromptBlock({ prompt }: { prompt: Prompt }) {
+  function handleCopy() {
+    navigator.clipboard.writeText(prompt.body).then(() => {
+      toast.success("Prompt copied to clipboard");
+    });
+  }
+
+  return (
+    <div className="rounded-lg border bg-muted/30 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/50">
+        <span className="text-sm font-medium">{prompt.title}</span>
+        <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 text-xs">
+          Copy
+        </Button>
+      </div>
+      <pre className="p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed overflow-x-auto">
+        {prompt.body}
+      </pre>
+    </div>
+  );
 }
 
 export default function LinkDetailPage({
@@ -61,9 +84,11 @@ export default function LinkDetailPage({
     );
   }
 
-  const youtubeId = link.contentTypes.includes("VIDEO")
+  const isStandalonePrompt = link.contentTypes.includes("PROMPT") && !link.url;
+  const youtubeId = link.url && link.contentTypes.includes("VIDEO")
     ? extractYouTubeId(link.url)
     : null;
+  const prompts: Prompt[] = link.prompts ?? [];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -74,7 +99,12 @@ export default function LinkDetailPage({
         &larr; Back to Feed
       </Link>
 
-      {youtubeId ? (
+      {isStandalonePrompt ? (
+        // Standalone prompt — show prompt body directly
+        prompts.length > 0 ? (
+          <PromptBlock prompt={prompts[0]} />
+        ) : null
+      ) : youtubeId ? (
         <div className="aspect-video w-full overflow-hidden rounded-xl">
           <iframe
             src={`https://www.youtube.com/embed/${youtubeId}`}
@@ -111,14 +141,16 @@ export default function LinkDetailPage({
           ))}
           {link.contentTypes.map((ct) => (
             <span key={ct} className="text-sm text-muted-foreground">
-              {ct === "VIDEO" ? "Video" : "Article"}
+              {ct === "VIDEO" ? "Video" : ct === "PROMPT" ? "Prompt" : "Article"}
             </span>
           ))}
         </div>
 
-        <p className="font-serif text-base leading-relaxed text-muted-foreground">
-          {link.summary}
-        </p>
+        {!isStandalonePrompt && (
+          <p className="font-serif text-base leading-relaxed text-muted-foreground">
+            {link.summary}
+          </p>
+        )}
 
         {link.contextNote && (
           <div className="rounded-lg border bg-muted/50 px-4 py-3">
@@ -126,6 +158,18 @@ export default function LinkDetailPage({
               Context from contributor
             </p>
             <p className="text-sm text-foreground">{link.contextNote}</p>
+          </div>
+        )}
+
+        {/* Attached prompts for non-standalone links */}
+        {!isStandalonePrompt && prompts.length > 0 && (
+          <div className="space-y-3 pt-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Related Prompts
+            </h2>
+            {prompts.map((prompt) => (
+              <PromptBlock key={prompt.id} prompt={prompt} />
+            ))}
           </div>
         )}
 
@@ -140,13 +184,15 @@ export default function LinkDetailPage({
         </div>
 
         <div className="flex gap-3 pt-2">
-          <a
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button>Open Original</Button>
-          </a>
+          {link.url && (
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button>Open Original</Button>
+            </a>
+          )}
           <Button variant="outline" onClick={handleCopyPermalink}>
             Copy Permalink
           </Button>

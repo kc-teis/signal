@@ -35,6 +35,10 @@ export function EnrichmentPreview({
     preview.contentTypes
   );
   const [thumbnailUrl] = useState(preview.thumbnailUrl);
+  const [attachedPrompts, setAttachedPrompts] = useState<{ title: string; body: string }[]>([]);
+  const [showPromptForm, setShowPromptForm] = useState(false);
+  const [newPromptTitle, setNewPromptTitle] = useState("");
+  const [newPromptBody, setNewPromptBody] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const [apiError, setApiError] = useState("");
 
@@ -68,9 +72,19 @@ export function EnrichmentPreview({
         }),
       });
 
+      const data = await res.json().catch(() => null);
+
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
         throw new Error(data?.error || `Publish failed (${res.status})`);
+      }
+
+      // Attach prompts to the published link
+      if (attachedPrompts.length > 0 && data?.id) {
+        await fetch(`/api/prompts?attach=${data.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompts: attachedPrompts }),
+        });
       }
 
       onPublish();
@@ -186,6 +200,87 @@ export function EnrichmentPreview({
             </Badge>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-foreground">
+            Attached Prompts <span className="font-normal text-muted-foreground">(optional)</span>
+          </label>
+          {!showPromptForm && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPromptForm(true)}
+              disabled={isPublishing}
+            >
+              Add a Prompt
+            </Button>
+          )}
+        </div>
+
+        {attachedPrompts.map((p, i) => (
+          <div key={i} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{p.title}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs text-destructive"
+                onClick={() => setAttachedPrompts((prev) => prev.filter((_, j) => j !== i))}
+              >
+                Remove
+              </Button>
+            </div>
+            <pre className="text-xs font-mono text-muted-foreground whitespace-pre-wrap line-clamp-3">{p.body}</pre>
+          </div>
+        ))}
+
+        {showPromptForm && (
+          <div className="rounded-lg border p-3 space-y-3">
+            <Input
+              placeholder="Prompt title"
+              value={newPromptTitle}
+              onChange={(e) => setNewPromptTitle(e.target.value)}
+              disabled={isPublishing}
+            />
+            <Textarea
+              placeholder="Paste or write the prompt..."
+              value={newPromptBody}
+              onChange={(e) => setNewPromptBody(e.target.value)}
+              rows={4}
+              className="font-mono text-sm"
+              disabled={isPublishing}
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (newPromptTitle.trim() && newPromptBody.trim()) {
+                    setAttachedPrompts((prev) => [...prev, { title: newPromptTitle.trim(), body: newPromptBody.trim() }]);
+                    setNewPromptTitle("");
+                    setNewPromptBody("");
+                    setShowPromptForm(false);
+                  }
+                }}
+                disabled={!newPromptTitle.trim() || !newPromptBody.trim()}
+              >
+                Add
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowPromptForm(false);
+                  setNewPromptTitle("");
+                  setNewPromptBody("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {apiError && (

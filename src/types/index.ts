@@ -4,9 +4,21 @@ export interface Category {
   slug: string;
 }
 
+export interface Prompt {
+  id: string;
+  linkId: string | null;
+  title: string;
+  body: string;
+  contributorName: string;
+  contributorEmail: string;
+  categorySlugs: string[];
+  sortOrder: number;
+  createdAt: string;
+}
+
 export interface Link {
   id: string;
-  url: string;
+  url: string | null;
   slug: string;
   title: string | null;
   summary: string | null;
@@ -24,6 +36,8 @@ export interface Link {
 
 export type LinkWithCategory = Link & {
   categories: Category[];
+  promptCount?: number;
+  prompts?: Prompt[];
 };
 
 export interface ContributorSummary {
@@ -49,5 +63,5 @@ export interface EnrichmentPreview {
   contentTypes: string[];
   thumbnailUrl: string | null;
   contextNote: string | null;
-  url: string;
+  url: string | null;
 }

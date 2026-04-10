@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PromptIcon } from "@/components/icons/content-type-icons";
 import type { LinkWithCategory } from "@/types";
 
 function timeAgo(date: string | Date): string {
@@ -41,9 +42,9 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
 
   return (
     <motion.a
-      href={link.url}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={link.url ?? `/link/${link.slug}`}
+      target={link.url ? "_blank" : "_self"}
+      rel={link.url ? "noopener noreferrer" : undefined}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.03 }}
@@ -103,6 +104,12 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
           {link.contextNote && (
             <span className="font-serif text-xs italic text-foreground truncate">
               &mdash; &ldquo;{link.contextNote}&rdquo;
+            </span>
+          )}
+          {(link.promptCount ?? 0) > 0 && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+              <PromptIcon className="size-3" />
+              {link.promptCount}
             </span>
           )}
         </div>

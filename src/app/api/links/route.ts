@@ -50,7 +50,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { url, contributorName, contributorEmail, contextNote } = parsed.data;
+    const { url, contributorName, contributorEmail, contextNote, prompts: promptsInput } = parsed.data;
+
+    if (!url) {
+      return NextResponse.json(
+        { error: "URL is required for link submissions" },
+        { status: 400 }
+      );
+    }
 
     const enrichment = await enrichLink(url);
 
@@ -81,6 +88,20 @@ export async function POST(request: NextRequest) {
         { error: "Failed to create link" },
         { status: 500 }
       );
+    }
+
+    // Insert attached prompts if provided
+    if (promptsInput && promptsInput.length > 0) {
+      const promptRows = promptsInput.map((p, i) => ({
+        link_id: link.id,
+        title: p.title,
+        body: p.body,
+        contributor_name: contributorName,
+        contributor_email: contributorEmail,
+        category_slugs: link.category_slugs,
+        sort_order: i,
+      }));
+      await supabase.from("prompts").insert(promptRows);
     }
 
     const categories = await resolveCategories(link.category_slugs);
@@ -156,11 +177,27 @@ export async function GET(request: NextRequest) {
     const allCategories = await resolveCategories(allSlugs);
     const categoryMap = new Map(allCategories.map((c) => [c.slug, c]));
 
+    // Fetch prompt counts for all links in one query
+    const linkIds = (links ?? []).map((l: any) => l.id);
+    const promptCountMap = new Map<string, number>();
+    if (linkIds.length > 0) {
+      const { data: promptCounts } = await supabase
+        .from("prompts")
+        .select("link_id")
+        .in("link_id", linkIds);
+      for (const p of promptCounts ?? []) {
+        promptCountMap.set(p.link_id, (promptCountMap.get(p.link_id) ?? 0) + 1);
+      }
+    }
+
     const mappedLinks = (links ?? []).map((link: any) => {
       const linkCategories = (link.category_slugs ?? [])
         .map((s: string) => categoryMap.get(s))
         .filter(Boolean) as Category[];
-      return mapLink(link, linkCategories);
+      return {
+        ...mapLink(link, linkCategories),
+        promptCount: promptCountMap.get(link.id) ?? 0,
+      };
     });
 
     return NextResponse.json({

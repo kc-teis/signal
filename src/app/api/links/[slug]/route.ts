@@ -54,7 +54,30 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     const categories = await resolveCategories(link.category_slugs);
 
-    return NextResponse.json(mapLink(link, categories));
+    // Fetch attached prompts
+    const { data: promptsData } = await supabase
+      .from("prompts")
+      .select("*")
+      .eq("link_id", link.id)
+      .order("sort_order", { ascending: true });
+
+    const prompts = (promptsData ?? []).map((p: any) => ({
+      id: p.id,
+      linkId: p.link_id,
+      title: p.title,
+      body: p.body,
+      contributorName: p.contributor_name,
+      contributorEmail: p.contributor_email,
+      categorySlugs: p.category_slugs,
+      sortOrder: p.sort_order,
+      createdAt: p.created_at,
+    }));
+
+    return NextResponse.json({
+      ...mapLink(link, categories),
+      prompts,
+      promptCount: prompts.length,
+    });
   } catch (error) {
     console.error("GET /api/links/[slug] error:", error);
     return NextResponse.json(
