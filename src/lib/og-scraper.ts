@@ -6,9 +6,41 @@ export interface OGResult {
   description: string;
   image: string | null;
   articleImage: string | null;
+  articleText: string | null;
   siteName: string | null;
   isYouTube: boolean;
   youtubeId: string | null;
+}
+
+function extractArticleText(html: string): string | null {
+  // Strip script, style, nav, header, footer tags and their content
+  let text = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
+    .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, "")
+    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "");
+
+  // Replace block elements with newlines, then strip all tags
+  text = text
+    .replace(/<\/?(p|div|br|h[1-6]|li|blockquote)[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#?\w+;/g, " ");
+
+  // Clean up whitespace
+  text = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 20)
+    .join("\n")
+    .trim();
+
+  // Return first ~3000 chars (enough for GPT to summarize, within token limits)
+  return text.length > 50 ? text.slice(0, 3000) : null;
 }
 
 function extractArticleImage(html: string, baseUrl: string): string | null {
@@ -63,6 +95,9 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
     // Extract first substantial image from article body HTML
     const articleImage = extractArticleImage(html ?? "", url);
 
+    // Extract readable text from article body
+    const articleText = extractArticleText(html ?? "");
+
     const ogOrTwitter = image || twitterImg;
 
     return {
@@ -72,6 +107,7 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
         ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
         : ogOrTwitter,
       articleImage: ogOrTwitter ? null : articleImage,
+      articleText,
       siteName: result.ogSiteName || null,
       isYouTube,
       youtubeId,
@@ -84,6 +120,7 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
         ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
         : null,
       articleImage: null,
+      articleText: null,
       siteName: null,
       isYouTube,
       youtubeId,

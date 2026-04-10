@@ -13,9 +13,9 @@ export interface EnrichmentResult {
   metadata: OGResult;
 }
 
-const SYSTEM_PROMPT = `You are a content curator for an internal knowledge sharing platform at a healthcare technology company. Given a URL's metadata, produce a JSON object with:
+const SYSTEM_PROMPT = `You are a content curator for an internal knowledge sharing platform at a healthcare technology company. Given a URL's metadata and article content, produce a JSON object with:
 
-1. "summary": Write an original 2-3 sentence summary of the content's key insights. Write for busy professionals. NEVER copy the source description verbatim. NEVER end with "..." or trailing ellipsis. Every sentence must be complete.
+1. "summary": Write an original 2-3 sentence summary of the content's key insights based on the actual article text. Write for busy professionals. NEVER copy the source verbatim. NEVER end with "..." or trailing ellipsis. Every sentence must be complete. If article text is provided, base the summary on that — not just the metadata.
 2. "categories": Classify into 1-3 of these categories (pick all that genuinely apply): ${CATEGORY_NAMES.join(", ")}.
 3. "contentTypes": Array of content types present. Options: "ARTICLE", "VIDEO". A resource can be both (e.g., a Substack post with embedded video).
 
@@ -36,9 +36,10 @@ export async function enrichLink(url: string): Promise<EnrichmentResult> {
   const userPrompt = [
     `URL: ${url}`,
     `Title: ${og.title}`,
-    `Description: ${og.description}`,
+    og.description ? `Description: ${og.description}` : null,
     og.siteName ? `Site: ${og.siteName}` : null,
     og.isYouTube ? "Content Type: YouTube Video" : "Content Type: Article",
+    og.articleText ? `\nArticle Content:\n${og.articleText}` : null,
   ]
     .filter(Boolean)
     .join("\n");
