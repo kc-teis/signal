@@ -1,17 +1,25 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/", label: "Feed" },
-  { href: "/submit", label: "Submit" },
-  { href: "/contributors", label: "Contributors" },
-];
+import { getContributorCookies } from "@/lib/cookies";
 
 export function Nav() {
   const pathname = usePathname();
+  const [hasIdentity, setHasIdentity] = useState(false);
+
+  useEffect(() => {
+    const { email } = getContributorCookies();
+    setHasIdentity(!!email);
+  }, [pathname]);
+
+  const navItems = [
+    { href: "/", label: "Feed" },
+    { href: "/submit", label: "Submit" },
+    ...(hasIdentity ? [{ href: "/my-submissions", label: "My Submissions" }] : []),
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
