@@ -88,7 +88,7 @@ export default function LinkDetailPage({
         <div className="aspect-video w-full overflow-hidden rounded-xl bg-muted">
           <img
             src={link.thumbnailUrl}
-            alt=""
+            alt={link.title ?? "Link thumbnail"}
             className="h-full w-full object-cover"
           />
         </div>
@@ -101,7 +101,7 @@ export default function LinkDetailPage({
       )}
 
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold tracking-tight">{link.title}</h1>
+        <h1 className="font-serif text-2xl font-bold tracking-tight">{link.title}</h1>
 
         <div className="flex flex-wrap items-center gap-3">
           {link.categories.map((cat) => (
@@ -116,7 +116,7 @@ export default function LinkDetailPage({
           ))}
         </div>
 
-        <p className="text-base leading-relaxed text-muted-foreground">
+        <p className="font-serif text-base leading-relaxed text-muted-foreground">
           {link.summary}
         </p>
 

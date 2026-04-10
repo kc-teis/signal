@@ -74,10 +74,12 @@ export default function FeedPage() {
           onClear={clearFilters}
         />
 
-        <div className="flex shrink-0 gap-1 self-start rounded-md border p-0.5">
+        <div className="flex shrink-0 gap-1 self-start rounded-md border p-0.5" role="tablist" aria-label="View mode">
           <button
+            role="tab"
+            aria-selected={viewMode === "grid"}
             onClick={() => setViewMode("grid")}
-            className={`rounded px-2.5 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               viewMode === "grid"
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground"
@@ -86,8 +88,10 @@ export default function FeedPage() {
             Cards
           </button>
           <button
+            role="tab"
+            aria-selected={viewMode === "list"}
             onClick={() => setViewMode("list")}
-            className={`rounded px-2.5 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               viewMode === "list"
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground"

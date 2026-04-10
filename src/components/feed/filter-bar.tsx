@@ -144,7 +144,7 @@ export function FilterBar({
             onContributorChange(val === "__all__" ? "" : val)
           }
         >
-          <SelectTrigger className="w-full sm:w-auto">
+          <SelectTrigger className="w-full sm:w-auto" aria-label="Filter by contributor">
             <SelectValue placeholder="All Contributors" />
           </SelectTrigger>
           <SelectContent>
@@ -158,7 +158,7 @@ export function FilterBar({
         </Select>
 
         <Select value={sort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-full sm:w-auto">
+          <SelectTrigger className="w-full sm:w-auto" aria-label="Sort order">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

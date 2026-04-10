@@ -159,7 +159,7 @@ export function EnrichmentPreview({
             <Badge
               key={cat.slug}
               variant={categorySlugs.includes(cat.slug) ? "default" : "outline"}
-              className="cursor-pointer select-none"
+              className={isPublishing ? "cursor-not-allowed opacity-50 select-none" : "cursor-pointer select-none"}
               onClick={() => !isPublishing && toggleCategory(cat.slug)}
             >
               {cat.name}
@@ -179,7 +179,7 @@ export function EnrichmentPreview({
               variant={
                 contentTypes.includes(ct.value) ? "default" : "outline"
               }
-              className="cursor-pointer select-none"
+              className={isPublishing ? "cursor-not-allowed opacity-50 select-none" : "cursor-pointer select-none"}
               onClick={() => !isPublishing && toggleContentType(ct.value)}
             >
               {ct.label}

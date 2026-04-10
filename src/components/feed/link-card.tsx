@@ -118,7 +118,7 @@ export function LinkCard({ link, index }: LinkCardProps) {
           <span className="font-serif text-sm font-medium text-background">
             {link.contributorName}
           </span>
-          <span className="shrink-0 text-xs font-bold text-white/60">
+          <span className="shrink-0 text-xs font-bold text-white/80">
             {timeAgo(link.createdAt)}
           </span>
         </div>

@@ -51,7 +51,7 @@ export function Nav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-foreground/80",
+                "text-sm font-medium transition-colors hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1 -mx-1",
                 pathname === item.href
                   ? "text-foreground"
                   : "text-foreground/60"

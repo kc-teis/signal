@@ -81,7 +81,8 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
               variant="ghost"
               size="sm"
               onClick={handleCopyPermalink}
-              className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity h-6 px-2"
+              className="text-xs text-muted-foreground sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-6 px-2 focus-visible:opacity-100"
+              aria-label="Copy permalink"
             >
               Copy link
             </Button>

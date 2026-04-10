@@ -93,9 +93,12 @@ export default function MySubmissionsPage() {
           <p className="text-lg font-medium text-foreground">
             No submissions yet
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             Links you submit will appear here for editing.
           </p>
+          <a href="/submit" className="mt-3 inline-flex text-sm font-medium text-primary hover:underline">
+            Submit your first link
+          </a>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

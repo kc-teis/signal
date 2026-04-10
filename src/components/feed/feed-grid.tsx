@@ -30,8 +30,7 @@ export function FeedGrid({ links, isLoading, viewMode = "grid" }: FeedGridProps)
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
         <p className="text-lg font-medium text-foreground">No links found</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Be the first to share something with your team — submit a link to get
-          started.
+          Try adjusting your filters, or submit a link to get started.
         </p>
       </div>
     );
