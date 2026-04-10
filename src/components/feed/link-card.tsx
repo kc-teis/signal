@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArticleIcon, VideoIcon, PromptIcon } from "@/components/icons/content-type-icons";
+import { FileText } from "lucide-react";
 import type { LinkWithCategory } from "@/types";
 
 function timeAgo(date: string | Date): string {
@@ -87,11 +88,17 @@ export function LinkCard({ link, index }: LinkCardProps) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
-      ) : (
+      ) : link.contentTypes.includes("VIDEO") ? (
         <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-muted flex items-center justify-center">
-          <span className="text-4xl font-bold text-primary/20 select-none">
-            {link.contentTypes.includes("VIDEO") ? "VIDEO" : "ARTICLE"}
-          </span>
+          <span className="text-4xl font-bold text-primary/20 select-none">VIDEO</span>
+        </div>
+      ) : (
+        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-muted">
+          <p className="absolute inset-0 px-3 pt-3 overflow-hidden text-[11px] font-serif text-foreground/40 leading-snug select-none">
+            {link.summary}
+          </p>
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-muted to-transparent" />
+          <FileText className="absolute bottom-2 right-2 size-4 text-primary/20" />
         </div>
       )}
 
