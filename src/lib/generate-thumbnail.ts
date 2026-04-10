@@ -1,8 +1,7 @@
 import { openai } from "./openai";
 
 export async function generateThumbnail(
-  title: string,
-  summary: string
+  title: string
 ): Promise<string | null> {
   try {
     const response = await openai.images.generate({

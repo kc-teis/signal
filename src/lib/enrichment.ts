@@ -101,7 +101,7 @@ export async function enrichLink(url: string): Promise<EnrichmentResult> {
   }
 
   if (!thumbnailUrl) {
-    const generatedUrl = await generateThumbnail(og.title, summary);
+    const generatedUrl = await generateThumbnail(og.title);
     if (generatedUrl) {
       thumbnailUrl = await uploadThumbnail(generatedUrl);
       if (!thumbnailUrl) thumbnailUrl = generatedUrl;
