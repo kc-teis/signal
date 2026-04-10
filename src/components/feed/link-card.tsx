@@ -72,11 +72,12 @@ export function LinkCard({ link, index }: LinkCardProps) {
       className="group grid h-full cursor-pointer grid-rows-[auto_1fr_auto] overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10 transition-all hover:ring-foreground/20 hover:shadow-lg"
     >
       {link.contentTypes.includes("PROMPT") && !link.thumbnailUrl ? (
-        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-muted flex items-center justify-center p-4">
-          <PromptIcon className="absolute top-3 right-3 size-5 text-emerald-600/25" />
-          <pre className="w-full h-full overflow-hidden text-xs font-mono text-foreground/40 leading-relaxed whitespace-pre-wrap select-none">
+        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-muted">
+          <pre className="absolute inset-0 px-3 pt-3 overflow-hidden text-[11px] font-mono text-foreground/50 leading-snug whitespace-pre-wrap select-none">
             {link.summary}
           </pre>
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-muted to-transparent" />
+          <PromptIcon className="absolute bottom-2 right-2 size-4 text-emerald-600/30" />
         </div>
       ) : link.thumbnailUrl ? (
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
