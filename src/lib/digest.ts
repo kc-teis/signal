@@ -110,13 +110,13 @@ export function generateDigestHtml(
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                   <tr>
                     <td style="width:80px;vertical-align:top;padding-right:16px;">
-                      <a href="${link.url}" target="_blank" style="text-decoration:none;">
+                      <a href="${link.url ?? `#link-${link.slug}`}" target="_blank" style="text-decoration:none;">
                         ${thumbnail}
                       </a>
                     </td>
                     <td style="vertical-align:top;">
-                      <a href="${link.url}" target="_blank" style="text-decoration:none;color:#111827;font-size:16px;font-weight:600;line-height:1.4;">
-                        ${escapeHtml(link.title ?? link.url)}
+                      <a href="${link.url ?? `#link-${link.slug}`}" target="_blank" style="text-decoration:none;color:#111827;font-size:16px;font-weight:600;line-height:1.4;">
+                        ${escapeHtml(link.title ?? link.url ?? link.slug)}
                       </a>
                       ${contentBadges}
                       <div style="margin-top:6px;">
