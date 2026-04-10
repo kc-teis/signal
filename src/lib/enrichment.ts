@@ -1,5 +1,6 @@
 import { openai } from "./openai";
 import { scrapeOpenGraph, type OGResult } from "./og-scraper";
+import { uploadThumbnail } from "./thumbnail-store";
 import { CATEGORY_NAMES, CATEGORIES } from "./constants";
 
 export interface EnrichmentResult {
@@ -88,12 +89,19 @@ export async function enrichLink(url: string): Promise<EnrichmentResult> {
     contentTypes.push("VIDEO");
   }
 
+  // Upload thumbnail to Supabase Storage for persistence
+  let thumbnailUrl: string | null = null;
+  if (og.image) {
+    thumbnailUrl = await uploadThumbnail(og.image);
+    if (!thumbnailUrl) thumbnailUrl = og.image; // fall back to original URL
+  }
+
   return {
     title: og.title,
     summary,
     categorySlugs,
     contentTypes,
-    thumbnailUrl: og.image,
+    thumbnailUrl,
     metadata: og,
   };
 }
