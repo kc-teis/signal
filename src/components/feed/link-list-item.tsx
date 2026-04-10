@@ -59,7 +59,7 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
       ) : (
         <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/10 to-muted">
           <span className="text-xs font-bold text-primary/30">
-            {link.contentTypes.includes("VIDEO") ? "VIDEO" : "ARTICLE"}
+            {link.contentTypes.includes("VIDEO") ? "VIDEO" : link.contentTypes.includes("PROMPT") ? "PROMPT" : "ARTICLE"}
           </span>
         </div>
       )}
