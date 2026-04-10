@@ -177,16 +177,22 @@ export async function GET(request: NextRequest) {
     const allCategories = await resolveCategories(allSlugs);
     const categoryMap = new Map(allCategories.map((c) => [c.slug, c]));
 
-    // Fetch prompt counts for all links in one query
+    // Fetch prompt counts and bodies for all links in one query
     const linkIds = (links ?? []).map((l: any) => l.id);
     const promptCountMap = new Map<string, number>();
+    const promptBodyMap = new Map<string, string>();
     if (linkIds.length > 0) {
-      const { data: promptCounts } = await supabase
+      const { data: promptRows } = await supabase
         .from("prompts")
-        .select("link_id")
-        .in("link_id", linkIds);
-      for (const p of promptCounts ?? []) {
+        .select("link_id, body, sort_order")
+        .in("link_id", linkIds)
+        .order("sort_order", { ascending: true });
+      for (const p of promptRows ?? []) {
         promptCountMap.set(p.link_id, (promptCountMap.get(p.link_id) ?? 0) + 1);
+        // Keep the first prompt body per link (lowest sort_order)
+        if (!promptBodyMap.has(p.link_id)) {
+          promptBodyMap.set(p.link_id, p.body);
+        }
       }
     }
 
@@ -197,6 +203,7 @@ export async function GET(request: NextRequest) {
       return {
         ...mapLink(link, linkCategories),
         promptCount: promptCountMap.get(link.id) ?? 0,
+        promptBody: promptBodyMap.get(link.id) ?? null,
       };
     });
 

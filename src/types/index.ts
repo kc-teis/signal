@@ -37,6 +37,7 @@ export interface Link {
 export type LinkWithCategory = Link & {
   categories: Category[];
   promptCount?: number;
+  promptBody?: string | null;
   prompts?: Prompt[];
 };
 

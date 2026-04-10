@@ -74,7 +74,7 @@ export function LinkCard({ link, index }: LinkCardProps) {
       {link.contentTypes.includes("PROMPT") && !link.thumbnailUrl ? (
         <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-muted">
           <pre className="absolute inset-0 px-3 pt-3 overflow-hidden text-[11px] font-mono text-foreground/50 leading-snug whitespace-pre-wrap select-none">
-            {link.summary}
+            {link.promptBody ?? link.summary}
           </pre>
           <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-muted to-transparent" />
           <PromptIcon className="absolute bottom-2 right-2 size-4 text-emerald-600/30" />
