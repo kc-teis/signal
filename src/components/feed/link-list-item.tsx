@@ -32,12 +32,28 @@ interface LinkListItemProps {
 }
 
 export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
-  function handleCopyPermalink(e: React.MouseEvent) {
+  const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
+
+  async function handleCopyAction(e: React.MouseEvent) {
     e.stopPropagation();
-    const url = `${window.location.origin}/link/${link.slug}`;
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success("Permalink copied");
-    });
+    e.preventDefault();
+    if (isPrompt) {
+      try {
+        const res = await fetch(`/api/prompts?link_id=${link.id}`);
+        const prompts = await res.json();
+        const body = Array.isArray(prompts) && prompts.length > 0 ? prompts[0].body : link.summary;
+        await navigator.clipboard.writeText(body ?? "");
+        toast.success("Prompt copied to clipboard");
+      } catch {
+        await navigator.clipboard.writeText(link.summary ?? "");
+        toast.success("Prompt copied to clipboard");
+      }
+    } else {
+      const url = `${window.location.origin}/link/${link.slug}`;
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success("Permalink copied");
+      });
+    }
   }
 
   return (
@@ -85,11 +101,11 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleCopyPermalink}
+              onClick={handleCopyAction}
               className="text-xs text-muted-foreground sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-6 px-2 focus-visible:opacity-100"
-              aria-label="Copy permalink"
+              aria-label={isPrompt ? "Copy prompt" : "Copy permalink"}
             >
-              Copy link
+              {isPrompt ? "Copy prompt" : "Copy link"}
             </Button>
           </div>
         </div>
