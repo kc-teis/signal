@@ -34,13 +34,19 @@ interface LinkCardProps {
 export function LinkCard({ link, index }: LinkCardProps) {
   const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
 
-  function handleCopyAction(e: React.MouseEvent) {
+  async function handleCopyAction(e: React.MouseEvent) {
     e.stopPropagation();
     if (isPrompt) {
-      // Copy the prompt summary (truncated body) — full body available on detail page
-      navigator.clipboard.writeText(link.summary ?? "").then(() => {
+      try {
+        const res = await fetch(`/api/prompts?link_id=${link.id}`);
+        const prompts = await res.json();
+        const body = Array.isArray(prompts) && prompts.length > 0 ? prompts[0].body : link.summary;
+        await navigator.clipboard.writeText(body ?? "");
         toast.success("Prompt copied to clipboard");
-      });
+      } catch {
+        await navigator.clipboard.writeText(link.summary ?? "");
+        toast.success("Prompt copied to clipboard");
+      }
     } else {
       const url = `${window.location.origin}/link/${link.slug}`;
       navigator.clipboard.writeText(url).then(() => {
