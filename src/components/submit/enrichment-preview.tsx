@@ -115,7 +115,7 @@ export function EnrichmentPreview({
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           <a
-            href={preview.url}
+            href={preview.url ?? undefined}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-muted-foreground hover:underline break-all"
