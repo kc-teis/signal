@@ -32,12 +32,21 @@ interface LinkCardProps {
 }
 
 export function LinkCard({ link, index }: LinkCardProps) {
-  function handleCopyPermalink(e: React.MouseEvent) {
+  const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
+
+  function handleCopyAction(e: React.MouseEvent) {
     e.stopPropagation();
-    const url = `${window.location.origin}/link/${link.slug}`;
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success("Permalink copied to clipboard");
-    });
+    if (isPrompt) {
+      // Copy the prompt summary (truncated body) — full body available on detail page
+      navigator.clipboard.writeText(link.summary ?? "").then(() => {
+        toast.success("Prompt copied to clipboard");
+      });
+    } else {
+      const url = `${window.location.origin}/link/${link.slug}`;
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success("Permalink copied to clipboard");
+      });
+    }
   }
 
   function handleCardClick() {
@@ -115,10 +124,10 @@ export function LinkCard({ link, index }: LinkCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleCopyPermalink}
+            onClick={handleCopyAction}
             className="mb-2 text-muted-foreground hover:text-foreground"
           >
-            Copy link
+            {isPrompt ? "Copy prompt" : "Copy link"}
           </Button>
           {(link.promptCount ?? 0) > 0 && (
             <span className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
