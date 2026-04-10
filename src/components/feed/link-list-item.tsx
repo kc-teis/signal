@@ -56,10 +56,14 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
           alt=""
           className="h-16 w-24 shrink-0 rounded-md object-cover"
         />
+      ) : link.contentTypes.includes("PROMPT") ? (
+        <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-muted">
+          <PromptIcon className="size-7 text-emerald-600/40" />
+        </div>
       ) : (
         <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/10 to-muted">
           <span className="text-xs font-bold text-primary/30">
-            {link.contentTypes.includes("VIDEO") ? "VIDEO" : link.contentTypes.includes("PROMPT") ? "PROMPT" : "ARTICLE"}
+            {link.contentTypes.includes("VIDEO") ? "VIDEO" : "ARTICLE"}
           </span>
         </div>
       )}
