@@ -5,6 +5,8 @@ import { submitLinkSchema, feedQuerySchema } from "@/lib/validators";
 import { generateSlug } from "@/lib/slug";
 import type { Category } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 async function resolveCategories(slugs: string[]): Promise<Category[]> {
   if (!slugs || slugs.length === 0) return [];

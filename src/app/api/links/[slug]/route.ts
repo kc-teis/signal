@@ -3,6 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { publishLinkSchema } from "@/lib/validators";
 import type { Category } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = { params: Promise<{ slug: string }> };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
