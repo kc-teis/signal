@@ -1,6 +1,7 @@
 import { openai } from "./openai";
 import { scrapeOpenGraph, type OGResult } from "./og-scraper";
 import { uploadThumbnail } from "./thumbnail-store";
+import { generateThumbnail } from "./generate-thumbnail";
 import { CATEGORY_NAMES, CATEGORIES } from "./constants";
 
 export interface EnrichmentResult {
@@ -90,10 +91,21 @@ export async function enrichLink(url: string): Promise<EnrichmentResult> {
   }
 
   // Upload thumbnail to Supabase Storage for persistence
+  // Fallback chain: OG/Twitter image → article body image → DALL-E generated
   let thumbnailUrl: string | null = null;
-  if (og.image) {
-    thumbnailUrl = await uploadThumbnail(og.image);
-    if (!thumbnailUrl) thumbnailUrl = og.image; // fall back to original URL
+  const imageSource = og.image || og.articleImage;
+
+  if (imageSource) {
+    thumbnailUrl = await uploadThumbnail(imageSource);
+    if (!thumbnailUrl) thumbnailUrl = imageSource;
+  }
+
+  if (!thumbnailUrl) {
+    const generatedUrl = await generateThumbnail(og.title, summary);
+    if (generatedUrl) {
+      thumbnailUrl = await uploadThumbnail(generatedUrl);
+      if (!thumbnailUrl) thumbnailUrl = generatedUrl;
+    }
   }
 
   return {
