@@ -26,10 +26,32 @@ const lora = Lora({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://signal-git-main-kc-teis-projects.vercel.app";
+
 export const metadata: Metadata = {
   title: "The Signal",
   description:
-    "Cut through the noise — curated articles, videos, and insights worth your time.",
+    "Curated articles, videos, and prompts worth your time.",
+  openGraph: {
+    title: "The Signal",
+    description: "Curated articles, videos, and prompts worth your time.",
+    type: "website",
+    url: siteUrl,
+    images: [
+      {
+        url: `${siteUrl}/api/og`,
+        width: 1200,
+        height: 630,
+        alt: "The Signal — curated articles, videos, and prompts",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Signal",
+    description: "Curated articles, videos, and prompts worth your time.",
+    images: [`${siteUrl}/api/og`],
+  },
 };
 
 export default function RootLayout({
