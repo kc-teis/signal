@@ -110,7 +110,7 @@ export function SignalLoader({ size = 56, className }: SignalLoaderProps) {
       // Black circle
       ctx!.beginPath();
       ctx!.arc(r, r, r, 0, Math.PI * 2);
-      ctx!.fillStyle = "#404040";
+      ctx!.fillStyle = "#B3B3B3";
       ctx!.fill();
 
       // Dim base wave
