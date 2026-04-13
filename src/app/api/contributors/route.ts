@@ -10,7 +10,8 @@ export async function GET() {
     const { data: links, error } = await supabase
       .from("links")
       .select("contributor_name, contributor_email, created_at")
-      .eq("status", "PUBLISHED");
+      .eq("status", "PUBLISHED")
+      .limit(1000);
 
     if (error) {
       console.error("Contributors query error:", error);
