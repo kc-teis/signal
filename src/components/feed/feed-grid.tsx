@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { LinkCard } from "./link-card";
 import { LinkListItem } from "./link-list-item";
 import { LinkCardSkeleton } from "./link-card-skeleton";
+import { SignalLoader } from "@/components/ui/signal-loader";
 import type { LinkWithCategory } from "@/types";
 
 export type ViewMode = "grid" | "list";
@@ -12,9 +14,37 @@ interface FeedGridProps {
   links: LinkWithCategory[];
   isLoading: boolean;
   viewMode?: ViewMode;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
 }
 
-export function FeedGrid({ links, isLoading, viewMode = "grid" }: FeedGridProps) {
+export function FeedGrid({
+  links,
+  isLoading,
+  viewMode = "grid",
+  hasNextPage,
+  isFetchingNextPage,
+  onLoadMore,
+}: FeedGridProps) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sentinelRef.current || !onLoadMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, onLoadMore]);
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -36,25 +66,30 @@ export function FeedGrid({ links, isLoading, viewMode = "grid" }: FeedGridProps)
     );
   }
 
-  if (viewMode === "list") {
-    return (
-      <div className="flex flex-col gap-2">
-        <AnimatePresence mode="popLayout">
-          {links.map((link, index) => (
-            <LinkListItem key={link.id} link={link} index={index} />
-          ))}
-        </AnimatePresence>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <AnimatePresence mode="popLayout">
-        {links.map((link, index) => (
-          <LinkCard key={link.id} link={link} index={index} />
-        ))}
-      </AnimatePresence>
-    </div>
+    <>
+      {viewMode === "list" ? (
+        <div className="flex flex-col gap-2">
+          <AnimatePresence mode="popLayout">
+            {links.map((link, index) => (
+              <LinkListItem key={link.id} link={link} index={index} />
+            ))}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <AnimatePresence mode="popLayout">
+            {links.map((link, index) => (
+              <LinkCard key={link.id} link={link} index={index} />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Infinite scroll sentinel + loader */}
+      <div ref={sentinelRef} className="flex justify-center py-8">
+        {isFetchingNextPage && <SignalLoader size={48} />}
+      </div>
+    </>
   );
 }

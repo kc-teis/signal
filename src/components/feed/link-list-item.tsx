@@ -70,6 +70,7 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
         <img
           src={link.thumbnailUrl}
           alt=""
+          loading="lazy"
           className="h-16 w-24 shrink-0 rounded-md object-cover"
         />
       ) : link.contentTypes.includes("PROMPT") ? (

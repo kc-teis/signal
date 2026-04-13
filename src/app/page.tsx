@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLinks, type LinkFilters } from "@/hooks/use-links";
 import { FilterBar } from "@/components/feed/filter-bar";
 import { FeedGrid, type ViewMode } from "@/components/feed/feed-grid";
-import { Button } from "@/components/ui/button";
 import { CATEGORIES } from "@/lib/constants";
 import type { ContributorSummary } from "@/types";
 
@@ -16,10 +15,15 @@ export default function FeedPage() {
     contributor: "",
     contentTypes: [],
     sort: "newest",
-    page: 1,
   });
 
-  const { data, isLoading } = useLinks(filters);
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useLinks(filters);
 
   const { data: contributors = [] } = useQuery<ContributorSummary[]>({
     queryKey: ["contributors"],
@@ -34,11 +38,7 @@ export default function FeedPage() {
     key: K,
     value: LinkFilters[K]
   ) {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-      page: key === "page" ? (value as number) : 1,
-    }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   }
 
   function clearFilters() {
@@ -47,12 +47,14 @@ export default function FeedPage() {
       contributor: "",
       contentTypes: [],
       sort: "newest",
-      page: 1,
     });
   }
 
-  const totalPages = data?.totalPages ?? 1;
-  const page = filters.page ?? 1;
+  const allLinks = data?.pages.flatMap((page) => page.links) ?? [];
+
+  const handleLoadMore = useCallback(() => {
+    fetchNextPage();
+  }, [fetchNextPage]);
 
   return (
     <div className="space-y-6">
@@ -103,34 +105,13 @@ export default function FeedPage() {
       </div>
 
       <FeedGrid
-        links={data?.links ?? []}
+        links={allLinks}
         isLoading={isLoading}
         viewMode={viewMode}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={handleLoadMore}
       />
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => updateFilter("page", page - 1)}
-          >
-            Previous
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => updateFilter("page", page + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

@@ -60,8 +60,8 @@ export default function MySubmissionsPage() {
 
   const initials = getInitials(name || email);
   const colorClass = getAvatarColor(email);
-  const links = data?.links ?? [];
-  const linkCount = data?.total ?? 0;
+  const links = data?.pages.flatMap((page) => page.links) ?? [];
+  const linkCount = data?.pages[0]?.total ?? 0;
 
   return (
     <div className="space-y-8">
