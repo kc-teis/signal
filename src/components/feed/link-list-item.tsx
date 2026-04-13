@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,8 @@ interface LinkListItemProps {
 }
 
 export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
+  const [imgError, setImgError] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
 
   async function handleCopyAction(e: React.MouseEvent) {
@@ -66,11 +69,12 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
       transition={{ duration: 0.2, delay: index * 0.03 }}
       className="group flex gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50"
     >
-      {link.thumbnailUrl ? (
+      {link.thumbnailUrl && !imgError ? (
         <img
           src={link.thumbnailUrl}
           alt=""
           loading="lazy"
+          onError={() => setImgError(true)}
           className="h-16 w-24 shrink-0 rounded-md object-cover"
         />
       ) : link.contentTypes.includes("PROMPT") ? (
@@ -113,11 +117,20 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
 
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
-            {link.categories.map((cat) => (
+            {(showAllCategories ? link.categories : link.categories.slice(0, 2)).map((cat) => (
               <Badge key={cat.slug} variant="secondary" className="text-[10px] px-1.5 py-0">
                 {cat.name}
               </Badge>
             ))}
+            {link.categories.length > 2 && !showAllCategories && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); setShowAllCategories(true); }}
+                className="shrink-0 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                +{link.categories.length - 2} more
+              </button>
+            )}
           </div>
           <span className="font-serif text-xs font-medium text-foreground">
             {link.contributorName}

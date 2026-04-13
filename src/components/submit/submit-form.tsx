@@ -194,7 +194,12 @@ export function SubmitForm({ onSuccess }: SubmitFormProps) {
         </div>
       )}
 
-      <Button type="submit" disabled={isSubmitting} className="w-full" size="lg">
+      <Button
+        type="submit"
+        disabled={isSubmitting || !url.trim() || !contributorName.trim() || !contributorEmail.trim()}
+        className="w-full"
+        size="lg"
+      >
         {isSubmitting ? (
           <>
             <Loader2 className="animate-spin" />

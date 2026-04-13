@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,8 @@ interface LinkCardProps {
 }
 
 export function LinkCard({ link, index }: LinkCardProps) {
+  const [imgError, setImgError] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
 
   async function handleCopyAction(e: React.MouseEvent) {
@@ -79,12 +82,13 @@ export function LinkCard({ link, index }: LinkCardProps) {
           <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-muted to-transparent" />
           <PromptIcon className="absolute bottom-2 right-2 size-4 text-emerald-600/30" />
         </div>
-      ) : link.thumbnailUrl ? (
+      ) : link.thumbnailUrl && !imgError ? (
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
           <img
             src={link.thumbnailUrl}
             alt=""
             loading="lazy"
+            onError={() => setImgError(true)}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
@@ -99,15 +103,19 @@ export function LinkCard({ link, index }: LinkCardProps) {
       <div className="flex flex-col gap-3 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-            {link.categories.slice(0, 2).map((cat) => (
+            {(showAllCategories ? link.categories : link.categories.slice(0, 2)).map((cat) => (
               <Badge key={cat.slug} variant="secondary" className="shrink-0">
                 {cat.name}
               </Badge>
             ))}
-            {link.categories.length > 2 && (
-              <span className="shrink-0 text-xs text-muted-foreground" title={link.categories.slice(2).map(c => c.name).join(", ")}>
+            {link.categories.length > 2 && !showAllCategories && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setShowAllCategories(true); }}
+                className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
                 +{link.categories.length - 2} more
-              </span>
+              </button>
             )}
             {link.contentTypes.map((ct) => (
               <span

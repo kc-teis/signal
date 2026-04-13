@@ -213,7 +213,12 @@ export function PromptSubmitForm({ onSuccess }: PromptSubmitFormProps) {
         </div>
       )}
 
-      <Button type="submit" disabled={isSubmitting} className="w-full" size="lg">
+      <Button
+        type="submit"
+        disabled={isSubmitting || !title.trim() || !body.trim() || categorySlugs.length === 0 || !contributorName.trim() || !contributorEmail.trim()}
+        className="w-full"
+        size="lg"
+      >
         {isSubmitting ? (
           <>
             <Loader2 className="animate-spin" />

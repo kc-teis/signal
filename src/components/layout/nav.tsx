@@ -51,13 +51,16 @@ export function Nav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1 -mx-1",
+                "relative text-sm font-medium transition-colors hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1 -mx-1 py-1",
                 pathname === item.href
-                  ? "text-foreground"
+                  ? "text-foreground font-semibold"
                   : "text-foreground/60"
               )}
             >
               {item.label}
+              {pathname === item.href && (
+                <span className="absolute inset-x-0 -bottom-[17px] h-[2px] bg-foreground rounded-full" />
+              )}
             </Link>
           ))}
         </nav>
