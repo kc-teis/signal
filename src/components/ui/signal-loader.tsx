@@ -92,7 +92,7 @@ export function SignalLoader({ size = 56, className }: SignalLoaderProps) {
     pathRef.current = buildPath(size);
     const { points, arcLengths, totalLength } = pathRef.current;
 
-    const duration = 1800;
+    const duration = 800;
     const tailLength = totalLength * 0.45;
     const segments = 80;
     const lineWidth = 2 * (size / 56);
