@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     images: [
       {
-        url: "https://qwjjaoayamykpqymvupx.supabase.co/storage/v1/object/public/thumbnails/og-image.png",
+        url: "https://qwjjaoayamykpqymvupx.supabase.co/storage/v1/object/public/thumbnails/og-image-v2.png",
         width: 1200,
         height: 630,
         alt: "The Signal — curated articles, videos, podcasts, and prompts",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "The Signal",
     description: "Curated articles, videos, podcasts, and prompts worth your time.",
-    images: ["https://qwjjaoayamykpqymvupx.supabase.co/storage/v1/object/public/thumbnails/og-image.png"],
+    images: ["https://qwjjaoayamykpqymvupx.supabase.co/storage/v1/object/public/thumbnails/og-image-v2.png"],
   },
 };
 
