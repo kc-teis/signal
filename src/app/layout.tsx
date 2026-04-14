@@ -38,11 +38,20 @@ export const metadata: Metadata = {
     description: "Curated articles, videos, podcasts, and prompts worth your time.",
     type: "website",
     url: siteUrl,
+    images: [
+      {
+        url: `${siteUrl}/og.png`,
+        width: 1200,
+        height: 630,
+        alt: "The Signal — curated articles, videos, podcasts, and prompts",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "The Signal",
     description: "Curated articles, videos, podcasts, and prompts worth your time.",
+    images: [`${siteUrl}/og.png`],
   },
 };
 
