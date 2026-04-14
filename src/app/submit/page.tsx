@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { SubmitForm } from "@/components/submit/submit-form";
 import { PromptSubmitForm } from "@/components/submit/prompt-submit-form";
 import { EnrichmentPreview } from "@/components/submit/enrichment-preview";
@@ -14,6 +15,7 @@ type Mode = "link" | "prompt";
 type Step = "submit" | "preview" | "success";
 
 export default function SubmitPage() {
+  const queryClient = useQueryClient();
   const [mode, setMode] = useState<Mode>("link");
   const [step, setStep] = useState<Step>("submit");
   const [preview, setPreview] = useState<EnrichmentPreviewType | null>(null);
@@ -29,7 +31,9 @@ export default function SubmitPage() {
   const handlePublish = useCallback(() => {
     setStep("success");
     toast.success(mode === "prompt" ? "Prompt published" : "Link published");
-  }, [mode]);
+    queryClient.invalidateQueries({ queryKey: ["links"] });
+    queryClient.invalidateQueries({ queryKey: ["contributors"] });
+  }, [mode, queryClient]);
 
   const handleStartOver = useCallback(() => {
     setPreview(null);
