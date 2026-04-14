@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArticleIcon, VideoIcon, PromptIcon } from "@/components/icons/content-type-icons";
+import { ArticleIcon, VideoIcon, PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
 import type { LinkWithCategory } from "@/types";
 
 function timeAgo(date: string | Date): string {
@@ -95,7 +95,7 @@ export function LinkCard({ link, index }: LinkCardProps) {
       ) : (
         <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-muted flex items-center justify-center">
           <span className="text-4xl font-bold text-primary/20 select-none">
-            {link.contentTypes.includes("VIDEO") ? "VIDEO" : "ARTICLE"}
+            {link.contentTypes.includes("VIDEO") ? "VIDEO" : link.contentTypes.includes("PODCAST") ? "PODCAST" : "ARTICLE"}
           </span>
         </div>
       )}
@@ -121,9 +121,9 @@ export function LinkCard({ link, index }: LinkCardProps) {
               <span
                 key={ct}
                 className="shrink-0 text-muted-foreground"
-                title={ct === "VIDEO" ? "Video" : "Article"}
+                title={ct === "VIDEO" ? "Video" : ct === "PODCAST" ? "Podcast" : ct === "PROMPT" ? "Prompt" : "Article"}
               >
-                {ct === "VIDEO" ? <VideoIcon /> : ct === "PROMPT" ? <PromptIcon /> : <ArticleIcon />}
+                {ct === "VIDEO" ? <VideoIcon /> : ct === "PODCAST" ? <PodcastIcon /> : ct === "PROMPT" ? <PromptIcon /> : <ArticleIcon />}
               </span>
             ))}
           </div>

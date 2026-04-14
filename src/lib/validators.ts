@@ -24,7 +24,7 @@ export const publishLinkSchema = z.object({
   summary: z.string().min(1),
   categorySlugs: z.array(z.string()).min(1, "At least one category required"),
   contentTypes: z
-    .array(z.enum(["ARTICLE", "VIDEO", "PROMPT"]))
+    .array(z.enum(["ARTICLE", "VIDEO", "PODCAST", "PROMPT"]))
     .min(1, "At least one content type required"),
   thumbnailUrl: z.string().url().optional().nullable(),
   contextNote: z.string().optional().nullable(),

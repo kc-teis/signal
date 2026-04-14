@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArticleIcon, VideoIcon, PromptIcon } from "@/components/icons/content-type-icons";
+import { ArticleIcon, VideoIcon, PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
 
 interface FilterBarProps {
   categories: { name: string; slug: string }[];
@@ -28,6 +28,7 @@ interface FilterBarProps {
 const CONTENT_TYPES = [
   { label: "Article", value: "ARTICLE" },
   { label: "Video", value: "VIDEO" },
+  { label: "Podcast", value: "PODCAST" },
   { label: "Prompt", value: "PROMPT" },
 ] as const;
 
@@ -124,7 +125,7 @@ export function FilterBar({
             className="cursor-pointer select-none gap-1.5"
             onClick={() => toggleContentType(ct.value)}
           >
-            {ct.value === "ARTICLE" ? <ArticleIcon className="size-3" /> : ct.value === "PROMPT" ? <PromptIcon className="size-3" /> : <VideoIcon className="size-3" />}
+            {ct.value === "ARTICLE" ? <ArticleIcon className="size-3" /> : ct.value === "VIDEO" ? <VideoIcon className="size-3" /> : ct.value === "PODCAST" ? <PodcastIcon className="size-3" /> : <PromptIcon className="size-3" />}
             {ct.label}
           </Badge>
         ))}

@@ -10,9 +10,25 @@ export const CATEGORIES = [
 
 export const CATEGORY_NAMES = CATEGORIES.map((c) => c.name);
 
-export const CONTENT_TYPES = ["ARTICLE", "VIDEO", "PROMPT"] as const;
+export const CONTENT_TYPES = ["ARTICLE", "VIDEO", "PODCAST", "PROMPT"] as const;
 
 export const YOUTUBE_REGEX =
   /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
+export const SPOTIFY_EPISODE_REGEX =
+  /open\.spotify\.com\/episode\/([a-zA-Z0-9]+)/;
+
+export const APPLE_PODCAST_REGEX =
+  /podcasts\.apple\.com\/[a-z]{2}\/podcast\/[^/]+\/id(\d+)\?i=(\d+)/;
+
+export const PODCAST_URL_PATTERNS = [
+  /open\.spotify\.com\/(episode|show)\//,
+  /podcasts\.apple\.com\//,
+  /overcast\.fm\//,
+  /pocketcasts\.com\//,
+  /podcasts\.google\.com\//,
+  /castro\.fm\//,
+  /pod\.link\//,
+];
 
 export const DEFAULT_PAGE_SIZE = 12;

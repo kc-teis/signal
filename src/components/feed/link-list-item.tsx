@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PromptIcon } from "@/components/icons/content-type-icons";
+import { PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
 import type { LinkWithCategory } from "@/types";
 
 function timeAgo(date: string | Date): string {
@@ -80,6 +80,10 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
       ) : link.contentTypes.includes("PROMPT") ? (
         <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-muted">
           <PromptIcon className="size-7 text-emerald-600/40" />
+        </div>
+      ) : link.contentTypes.includes("PODCAST") ? (
+        <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-violet-500/15 via-violet-400/10 to-muted">
+          <PodcastIcon className="size-7 text-violet-600/40" />
         </div>
       ) : (
         <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/10 to-muted">

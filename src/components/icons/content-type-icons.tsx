@@ -29,6 +29,21 @@ export function PromptIcon({ className = "size-3.5" }: { className?: string }) {
   );
 }
 
+export function PodcastIcon({ className = "size-3.5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path d="M6 4.5v7a1.5 1.5 0 0 1-3 0V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M10 4.5v7a1.5 1.5 0 0 0 3 0V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M6 4.5a2 2 0 0 1 4 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function VideoIcon({ className = "size-3.5" }: { className?: string }) {
   return (
     <svg

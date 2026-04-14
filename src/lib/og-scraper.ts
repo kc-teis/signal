@@ -1,5 +1,5 @@
 import ogs from "open-graph-scraper";
-import { YOUTUBE_REGEX } from "./constants";
+import { YOUTUBE_REGEX, SPOTIFY_EPISODE_REGEX, APPLE_PODCAST_REGEX, PODCAST_URL_PATTERNS } from "./constants";
 
 export interface OGResult {
   title: string;
@@ -10,6 +10,14 @@ export interface OGResult {
   siteName: string | null;
   isYouTube: boolean;
   youtubeId: string | null;
+  isPodcast: boolean;
+  spotifyEpisodeId: string | null;
+  applePodcastId: string | null;
+  audioUrl: string | null;
+  podcastMeta: {
+    showName: string | null;
+    duration: string | null;
+  } | null;
 }
 
 function extractArticleText(html: string): string | null {
@@ -69,13 +77,43 @@ function extractArticleImage(html: string, baseUrl: string): string | null {
   return null;
 }
 
+function detectPodcast(url: string, ogType?: string): boolean {
+  if (PODCAST_URL_PATTERNS.some((p) => p.test(url))) return true;
+  if (ogType && /music|audio|podcast/i.test(ogType)) return true;
+  return false;
+}
+
+function extractDuration(html: string): string | null {
+  // Look for common duration patterns in metadata or structured data
+  const metaMatch = html.match(/(?:duration|length)["':\s]+(\d+:\d{2}(?::\d{2})?)/i);
+  if (metaMatch) return metaMatch[1];
+  // JSON-LD duration (ISO 8601)
+  const isoMatch = html.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (isoMatch) {
+    const h = isoMatch[1] ? `${isoMatch[1]}:` : "";
+    const m = isoMatch[2] ?? "0";
+    const s = (isoMatch[3] ?? "0").padStart(2, "0");
+    return `${h}${m}:${s}`;
+  }
+  return null;
+}
+
 export async function scrapeOpenGraph(url: string): Promise<OGResult> {
   const youtubeMatch = url.match(YOUTUBE_REGEX);
   const isYouTube = !!youtubeMatch;
   const youtubeId = youtubeMatch?.[1] ?? null;
 
+  const spotifyMatch = url.match(SPOTIFY_EPISODE_REGEX);
+  const spotifyEpisodeId = spotifyMatch?.[1] ?? null;
+
+  const appleMatch = url.match(APPLE_PODCAST_REGEX);
+  const applePodcastId = appleMatch ? `${appleMatch[1]}?i=${appleMatch[2]}` : null;
+
   try {
     const { result, html } = await ogs({ url, timeout: 10000 });
+
+    const ogType = (result as Record<string, unknown>).ogType as string | undefined;
+    const isPodcast = detectPodcast(url, ogType);
 
     const ogImage = result.ogImage as
       | Array<{ url?: string }>
@@ -100,6 +138,18 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
 
     const ogOrTwitter = image || twitterImg;
 
+    // Extract audio URL from og:audio or meta tags
+    const ogAudio = (result as Record<string, unknown>).ogAudio as string | undefined;
+    const audioUrl = ogAudio || null;
+
+    // Podcast episode metadata
+    const podcastMeta = isPodcast
+      ? {
+          showName: result.ogSiteName || null,
+          duration: extractDuration(html ?? ""),
+        }
+      : null;
+
     return {
       title: result.ogTitle || result.dcTitle || "Untitled",
       description: result.ogDescription || result.dcDescription || "",
@@ -111,8 +161,14 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
       siteName: result.ogSiteName || null,
       isYouTube,
       youtubeId,
+      isPodcast,
+      spotifyEpisodeId,
+      applePodcastId,
+      audioUrl,
+      podcastMeta,
     };
   } catch {
+    const isPodcast = detectPodcast(url);
     return {
       title: "Untitled",
       description: "",
@@ -124,6 +180,11 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
       siteName: null,
       isYouTube,
       youtubeId,
+      isPodcast,
+      spotifyEpisodeId,
+      applePodcastId,
+      audioUrl: null,
+      podcastMeta: null,
     };
   }
 }

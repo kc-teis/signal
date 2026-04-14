@@ -6,12 +6,24 @@ import { useLinkBySlug } from "@/hooks/use-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { YOUTUBE_REGEX } from "@/lib/constants";
+import { YOUTUBE_REGEX, SPOTIFY_EPISODE_REGEX, APPLE_PODCAST_REGEX } from "@/lib/constants";
 import type { Prompt } from "@/types";
 
 function extractYouTubeId(url: string): string | null {
   const match = url.match(YOUTUBE_REGEX);
   return match ? match[1] : null;
+}
+
+function extractSpotifyEpisodeId(url: string): string | null {
+  const match = url.match(SPOTIFY_EPISODE_REGEX);
+  return match ? match[1] : null;
+}
+
+function extractApplePodcastEmbed(url: string): string | null {
+  const match = url.match(APPLE_PODCAST_REGEX);
+  if (!match) return null;
+  // Convert podcasts.apple.com to embed.podcasts.apple.com
+  return url.replace("podcasts.apple.com", "embed.podcasts.apple.com");
 }
 
 function formatDate(date: string | Date): string {
@@ -85,9 +97,12 @@ export default function LinkDetailPage({
   }
 
   const isStandalonePrompt = link.contentTypes.includes("PROMPT") && !link.url;
+  const isPodcast = link.contentTypes.includes("PODCAST");
   const youtubeId = link.url && link.contentTypes.includes("VIDEO")
     ? extractYouTubeId(link.url)
     : null;
+  const spotifyId = link.url && isPodcast ? extractSpotifyEpisodeId(link.url) : null;
+  const appleEmbedUrl = link.url && isPodcast ? extractApplePodcastEmbed(link.url) : null;
   const prompts: Prompt[] = link.prompts ?? [];
 
   return (
@@ -114,6 +129,29 @@ export default function LinkDetailPage({
             className="h-full w-full"
           />
         </div>
+      ) : spotifyId ? (
+        <div className="w-full overflow-hidden rounded-xl">
+          <iframe
+            src={`https://open.spotify.com/embed/episode/${spotifyId}?theme=0`}
+            title={link.title ?? ""}
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            className="w-full rounded-xl"
+            style={{ height: "232px" }}
+          />
+        </div>
+      ) : appleEmbedUrl ? (
+        <div className="w-full overflow-hidden rounded-xl">
+          <iframe
+            src={appleEmbedUrl}
+            title={link.title ?? ""}
+            allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
+            sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+            loading="lazy"
+            className="w-full rounded-xl"
+            style={{ height: "175px" }}
+          />
+        </div>
       ) : link.thumbnailUrl ? (
         <div className="aspect-video w-full overflow-hidden rounded-xl bg-muted">
           <img
@@ -125,7 +163,7 @@ export default function LinkDetailPage({
       ) : (
         <div className="aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-muted flex items-center justify-center">
           <span className="text-5xl font-bold text-primary/20 select-none">
-            {link.contentTypes.includes("VIDEO") ? "VIDEO" : "ARTICLE"}
+            {link.contentTypes.includes("VIDEO") ? "VIDEO" : link.contentTypes.includes("PODCAST") ? "PODCAST" : "ARTICLE"}
           </span>
         </div>
       )}
@@ -141,7 +179,7 @@ export default function LinkDetailPage({
           ))}
           {link.contentTypes.map((ct) => (
             <span key={ct} className="text-sm text-muted-foreground">
-              {ct === "VIDEO" ? "Video" : ct === "PROMPT" ? "Prompt" : "Article"}
+              {ct === "VIDEO" ? "Video" : ct === "PODCAST" ? "Podcast" : ct === "PROMPT" ? "Prompt" : "Article"}
             </span>
           ))}
         </div>

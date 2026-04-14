@@ -13,6 +13,7 @@ import { Loader2, ImageIcon } from "lucide-react";
 const CONTENT_TYPES = [
   { label: "Article", value: "ARTICLE" },
   { label: "Video", value: "VIDEO" },
+  { label: "Podcast", value: "PODCAST" },
 ] as const;
 
 interface EnrichmentPreviewProps {
@@ -125,7 +126,7 @@ export function EnrichmentPreview({
           <div className="flex flex-wrap gap-1">
             {contentTypes.map((ct) => (
               <Badge key={ct} variant="secondary">
-                {ct === "VIDEO" ? "Video" : "Article"}
+                {ct === "VIDEO" ? "Video" : ct === "PODCAST" ? "Podcast" : "Article"}
               </Badge>
             ))}
           </div>

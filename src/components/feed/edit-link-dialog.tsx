@@ -177,7 +177,7 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Content Type</label>
           <div className="flex gap-2" role="group" aria-label="Content types">
-            {(["ARTICLE", "VIDEO", "PROMPT"] as const).map((type) => (
+            {(["ARTICLE", "VIDEO", "PODCAST", "PROMPT"] as const).map((type) => (
               <Badge
                 key={type}
                 variant={contentTypes.includes(type) ? "default" : "outline"}
@@ -193,7 +193,7 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
                   }
                 }}
               >
-                {type === "ARTICLE" ? "Article" : type === "PROMPT" ? "Prompt" : "Video"}
+                {type === "ARTICLE" ? "Article" : type === "VIDEO" ? "Video" : type === "PODCAST" ? "Podcast" : "Prompt"}
               </Badge>
             ))}
           </div>
