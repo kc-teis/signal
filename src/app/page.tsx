@@ -32,6 +32,8 @@ export default function FeedPage() {
       if (!res.ok) throw new Error("Failed to fetch contributors");
       return res.json();
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   function updateFilter<K extends keyof LinkFilters>(
