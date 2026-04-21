@@ -41,6 +41,8 @@ export function useLinks(filters: LinkFilters) {
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     initialPageParam: 1,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
   });
 }
 

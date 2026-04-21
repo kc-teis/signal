@@ -17,6 +17,7 @@ interface FeedGridProps {
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
+  lastVisit?: Date | null;
 }
 
 export function FeedGrid({
@@ -26,6 +27,7 @@ export function FeedGrid({
   hasNextPage,
   isFetchingNextPage,
   onLoadMore,
+  lastVisit,
 }: FeedGridProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -72,7 +74,7 @@ export function FeedGrid({
         <div className="flex flex-col gap-2">
           <AnimatePresence mode="popLayout">
             {links.map((link, index) => (
-              <LinkListItem key={link.id} link={link} index={index} />
+              <LinkListItem key={link.id} link={link} index={index} lastVisit={lastVisit} />
             ))}
           </AnimatePresence>
         </div>
@@ -80,7 +82,7 @@ export function FeedGrid({
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {links.map((link, index) => (
-              <LinkCard key={link.id} link={link} index={index} />
+              <LinkCard key={link.id} link={link} index={index} lastVisit={lastVisit} />
             ))}
           </AnimatePresence>
         </div>

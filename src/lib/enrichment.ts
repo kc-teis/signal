@@ -102,6 +102,21 @@ export async function enrichLink(url: string): Promise<EnrichmentResult> {
     }
   } catch (error) {
     console.error("AI enrichment failed, using OG fallback:", error);
+    // Better fallback: try to generate a simple summary from available data
+    if (!ogDesc) {
+      if (og.articleText && og.articleText.length > 100) {
+        // Simple fallback summary from article text
+        const sentences = og.articleText.split(/[.!?]+/).filter(s => s.trim().length > 20);
+        if (sentences.length >= 2) {
+          summary = sentences.slice(0, 2).map(s => s.trim()).join('. ') + '.';
+        } else if (sentences.length === 1) {
+          summary = sentences[0].trim() + '.';
+        }
+      } else if (og.title && og.title !== "Untitled") {
+        // Fallback to a generic summary based on title
+        summary = `Content about ${og.title.toLowerCase()}.`;
+      }
+    }
   }
 
   // Ensure YouTube URLs always include VIDEO

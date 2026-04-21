@@ -1,4 +1,3 @@
-import ogs from "open-graph-scraper";
 import { YOUTUBE_REGEX, SPOTIFY_EPISODE_REGEX, APPLE_PODCAST_REGEX, PODCAST_URL_PATTERNS } from "./constants";
 
 export interface OGResult {
@@ -27,11 +26,12 @@ function extractArticleText(html: string): string | null {
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
     .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, "")
-    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "");
+    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "")
+    .replace(/<aside[^>]*>[\s\S]*?<\/aside>/gi, "");
 
   // Replace block elements with newlines, then strip all tags
   text = text
-    .replace(/<\/?(p|div|br|h[1-6]|li|blockquote)[^>]*>/gi, "\n")
+    .replace(/<\/?(p|div|br|h[1-6]|li|blockquote|article|section)[^>]*>/gi, "\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
@@ -39,31 +39,50 @@ function extractArticleText(html: string): string | null {
     .replace(/&gt;/g, ">")
     .replace(/&#?\w+;/g, " ");
 
-  // Clean up whitespace
-  text = text
+  // Clean up whitespace and split into lines
+  const lines = text
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.length > 20)
-    .join("\n")
-    .trim();
+    .filter((line) => line.length > 10); // Shorter minimum to capture more content
 
-  // Return first ~3000 chars (enough for GPT to summarize, within token limits)
-  return text.length > 50 ? text.slice(0, 3000) : null;
+  // Find the main content area (usually the longest continuous block of text)
+  let bestBlock = "";
+  let currentBlock = "";
+
+  for (const line of lines) {
+    if (line.length > 50) { // Substantial line
+      currentBlock += (currentBlock ? " " : "") + line;
+    } else if (currentBlock) {
+      if (currentBlock.length > bestBlock.length) {
+        bestBlock = currentBlock;
+      }
+      currentBlock = "";
+    }
+  }
+
+  if (currentBlock.length > bestBlock.length) {
+    bestBlock = currentBlock;
+  }
+
+  // Return the best block, truncated to reasonable length
+  return bestBlock.length > 50 ? bestBlock.slice(0, 3000) : null;
 }
 
 function extractArticleImage(html: string, baseUrl: string): string | null {
   // Match <img> tags with src attributes, skip tiny icons/trackers
   const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
-  const skipPatterns = /favicon|icon|logo|pixel|tracking|badge|avatar|emoji|1x1|spacer/i;
+  const skipPatterns = /favicon|icon|pixel|tracking|badge|avatar|emoji|1x1|spacer|logo/i;
   let match;
 
   while ((match = imgRegex.exec(html)) !== null) {
     const src = match[1];
     if (!src || skipPatterns.test(src)) continue;
-    // Skip data URIs and very short paths (likely icons)
+    // Skip data URIs
     if (src.startsWith("data:")) continue;
     // Skip SVGs (usually icons/logos)
     if (src.endsWith(".svg")) continue;
+    // Skip very short paths (likely icons)
+    if (src.length < 10) continue;
 
     // Resolve relative URLs
     try {
@@ -98,6 +117,87 @@ function extractDuration(html: string): string | null {
   return null;
 }
 
+function resolveRelativeUrl(value: string, baseUrl: string): string | null {
+  try {
+    return new URL(value, baseUrl).href;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeJsonLdObject(value: unknown, baseUrl: string): string | null {
+  if (typeof value === "string") return resolveRelativeUrl(value, baseUrl);
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const resolved = normalizeJsonLdObject(item, baseUrl);
+      if (resolved) return resolved;
+    }
+    return null;
+  }
+  if (typeof value === "object" && value !== null) {
+    const record = value as Record<string, unknown>;
+    if (typeof record.url === "string") return resolveRelativeUrl(record.url, baseUrl);
+    if (typeof record.thumbnailUrl === "string") return resolveRelativeUrl(record.thumbnailUrl, baseUrl);
+    if (typeof record.contentUrl === "string") return resolveRelativeUrl(record.contentUrl, baseUrl);
+  }
+  return null;
+}
+
+function collectJsonLdObjects(value: unknown, collector: Array<Record<string, unknown>>): void {
+  if (Array.isArray(value)) {
+    for (const item of value) collectJsonLdObjects(item, collector);
+    return;
+  }
+
+  if (!value || typeof value !== "object") return;
+
+  const record = value as Record<string, unknown>;
+  if (record["@type"] || record.thumbnailUrl || record.image || record.url) {
+    collector.push(record);
+  }
+
+  if (record["@graph"]) collectJsonLdObjects(record["@graph"], collector);
+  if (record.mainEntity) collectJsonLdObjects(record.mainEntity, collector);
+  if (record.itemListElement) collectJsonLdObjects(record.itemListElement, collector);
+}
+
+function extractJsonLdImage(html: string, baseUrl: string): string | null {
+  const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+
+  while ((match = scriptRegex.exec(html)) !== null) {
+    const jsonText = match[1].trim();
+    if (!jsonText) continue;
+
+    try {
+      const parsed = JSON.parse(jsonText);
+      const objects: Array<Record<string, unknown>> = [];
+      collectJsonLdObjects(parsed, objects);
+
+      for (const object of objects) {
+        const type = object["@type"];
+        const isVideoObject =
+          typeof type === "string" ? type === "VideoObject" :
+          Array.isArray(type) ? type.includes("VideoObject") : false;
+
+        if (isVideoObject) {
+          const thumbnail = normalizeJsonLdObject(object.thumbnailUrl ?? object.image ?? object.url, baseUrl);
+          if (thumbnail) return thumbnail;
+        }
+      }
+
+      for (const object of objects) {
+        const thumbnail = normalizeJsonLdObject(object.thumbnailUrl ?? object.image ?? object.url, baseUrl);
+        if (thumbnail) return thumbnail;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 export async function scrapeOpenGraph(url: string): Promise<OGResult> {
   const youtubeMatch = url.match(YOUTUBE_REGEX);
   const isYouTube = !!youtubeMatch;
@@ -109,11 +209,29 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
   const appleMatch = url.match(APPLE_PODCAST_REGEX);
   const applePodcastId = appleMatch ? `${appleMatch[1]}?i=${appleMatch[2]}` : null;
 
+  const requestUrl = url.split("#")[0];
+  const browserHeaders = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Upgrade-Insecure-Requests": "1",
+  };
+
   try {
-    const { result, html } = await ogs({ url, timeout: 10000 });
+    const response = await fetch(requestUrl, {
+      headers: browserHeaders,
+      redirect: "follow",
+    });
+    const pageHtml = await response.text();
+    const ogs = (await import("open-graph-scraper")) as any;
+    const { result } = await ogs({
+      html: pageHtml,
+      timeout: 10000,
+    });
 
     const ogType = (result as Record<string, unknown>).ogType as string | undefined;
-    const isPodcast = detectPodcast(url, ogType);
+    const isPodcast = detectPodcast(requestUrl, ogType);
 
     const ogImage = result.ogImage as
       | Array<{ url?: string }>
@@ -131,12 +249,13 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
     const twitterImg = twitterImage?.[0]?.url ?? null;
 
     // Extract first substantial image from article body HTML
-    const articleImage = extractArticleImage(html ?? "", url);
+    const articleImage = extractArticleImage(pageHtml, url);
 
     // Extract readable text from article body
-    const articleText = extractArticleText(html ?? "");
+    const articleText = extractArticleText(pageHtml);
 
-    const ogOrTwitter = image || twitterImg;
+    const jsonLdImage = extractJsonLdImage(pageHtml, url);
+    const ogOrTwitter = image || twitterImg || jsonLdImage;
 
     // Extract audio URL from og:audio or meta tags
     const ogAudio = (result as Record<string, unknown>).ogAudio as string | undefined;
@@ -146,7 +265,7 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
     const podcastMeta = isPodcast
       ? {
           showName: result.ogSiteName || null,
-          duration: extractDuration(html ?? ""),
+          duration: extractDuration(pageHtml),
         }
       : null;
 

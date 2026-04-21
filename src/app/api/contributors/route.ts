@@ -5,13 +5,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // Fetch all published links and aggregate in JS
-    // (Supabase JS client doesn't support groupBy natively)
+    // Fetch all links and aggregate contributors in JS.
+    // This ensures new contributors are reflected immediately when they submit their first item,
+    // even if the first link is still in draft state.
     const { data: links, error } = await supabase
       .from("links")
       .select("contributor_name, contributor_email, created_at")
-      .eq("status", "PUBLISHED")
-      .limit(1000);
+      .not("contributor_email", "is", null)
+      .neq("contributor_email", "")
+      .range(0, 9999);
 
     if (error) {
       console.error("Contributors query error:", error);

@@ -30,12 +30,18 @@ function timeAgo(date: string | Date): string {
 interface LinkListItemProps {
   link: LinkWithCategory;
   index?: number;
+  lastVisit?: Date | null;
 }
 
-export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
+export function LinkListItem({ link, index = 0, lastVisit }: LinkListItemProps) {
   const [imgError, setImgError] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
+  const isNew = Boolean(
+    lastVisit &&
+      (new Date(link.updatedAt).getTime() > lastVisit.getTime() ||
+        new Date(link.createdAt).getTime() > lastVisit.getTime())
+  );
 
   async function handleCopyAction(e: React.MouseEvent) {
     e.stopPropagation();
@@ -96,9 +102,16 @@ export function LinkListItem({ link, index = 0 }: LinkListItemProps) {
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-1.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-serif text-sm font-semibold leading-snug line-clamp-1">
-              {link.title}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-serif text-sm font-semibold leading-snug line-clamp-1">
+                {link.title}
+              </h3>
+              {isNew && (
+                <Badge variant="default" className="shrink-0">
+                  New content updated
+                </Badge>
+              )}
+            </div>
             <p className="mt-0.5 font-serif text-xs text-foreground line-clamp-1">
               {link.summary}
             </p>

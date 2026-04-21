@@ -107,19 +107,45 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       contentTypes,
       thumbnailUrl,
       contextNote,
+      regenerateEnrichment,
     } = parsed.data;
+
+    let updateData: any = {
+      title,
+      summary,
+      category_slugs: categorySlugs,
+      content_types: contentTypes,
+      thumbnail_url: thumbnailUrl ?? null,
+      context_note: contextNote ?? null,
+      status: "PUBLISHED",
+    };
+
+    // If regenerateEnrichment is true, re-run enrichment on the original URL
+    if (regenerateEnrichment) {
+      const { data: existingLink } = await supabase
+        .from("links")
+        .select("url")
+        .eq("slug", slug)
+        .single();
+
+      if (existingLink?.url) {
+        const { enrichLink } = await import("@/lib/enrichment");
+        const enrichment = await enrichLink(existingLink.url);
+        updateData = {
+          ...updateData,
+          title: enrichment.title,
+          summary: enrichment.summary,
+          thumbnail_url: enrichment.thumbnailUrl,
+          content_types: enrichment.contentTypes,
+          category_slugs: enrichment.categorySlugs,
+          metadata: enrichment.metadata,
+        };
+      }
+    }
 
     const { data: link, error: updateError } = await supabase
       .from("links")
-      .update({
-        title,
-        summary,
-        category_slugs: categorySlugs,
-        content_types: contentTypes,
-        thumbnail_url: thumbnailUrl ?? null,
-        context_note: contextNote ?? null,
-        status: "PUBLISHED",
-      })
+      .update(updateData)
       .eq("slug", slug)
       .select()
       .single();

@@ -28,6 +28,7 @@ export const publishLinkSchema = z.object({
     .min(1, "At least one content type required"),
   thumbnailUrl: z.string().url().optional().nullable(),
   contextNote: z.string().optional().nullable(),
+  regenerateEnrichment: z.boolean().optional(),
 });
 
 export const feedQuerySchema = z.object({

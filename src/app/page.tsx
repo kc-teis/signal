@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLinks, type LinkFilters } from "@/hooks/use-links";
 import { FilterBar } from "@/components/feed/filter-bar";
@@ -16,6 +16,13 @@ export default function FeedPage() {
     contentTypes: [],
     sort: "newest",
   });
+  const [lastVisit, setLastVisit] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("kh_last_visit");
+    setLastVisit(saved ? new Date(saved) : null);
+    window.localStorage.setItem("kh_last_visit", new Date().toISOString());
+  }, []);
 
   const {
     data,
@@ -34,6 +41,8 @@ export default function FeedPage() {
     },
     staleTime: 0,
     refetchOnMount: "always",
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
   });
 
   function updateFilter<K extends keyof LinkFilters>(
@@ -113,6 +122,7 @@ export default function FeedPage() {
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
         onLoadMore={handleLoadMore}
+        lastVisit={lastVisit}
       />
     </div>
   );

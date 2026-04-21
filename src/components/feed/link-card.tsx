@@ -30,12 +30,18 @@ function timeAgo(date: string | Date): string {
 interface LinkCardProps {
   link: LinkWithCategory;
   index: number;
+  lastVisit?: Date | null;
 }
 
-export function LinkCard({ link, index }: LinkCardProps) {
+export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
   const [imgError, setImgError] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
+  const isNew = Boolean(
+    lastVisit &&
+      (new Date(link.updatedAt).getTime() > lastVisit.getTime() ||
+        new Date(link.createdAt).getTime() > lastVisit.getTime())
+  );
 
   async function handleCopyAction(e: React.MouseEvent) {
     e.stopPropagation();
@@ -101,7 +107,7 @@ export function LinkCard({ link, index }: LinkCardProps) {
       )}
 
       <div className="flex flex-col gap-3 p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 overflow-hidden">
             {(showAllCategories ? link.categories : link.categories.slice(0, 2)).map((cat) => (
               <Badge key={cat.slug} variant="secondary" className="shrink-0">
@@ -127,6 +133,11 @@ export function LinkCard({ link, index }: LinkCardProps) {
               </span>
             ))}
           </div>
+          {isNew && (
+            <Badge variant="default" className="shrink-0">
+              New content updated
+            </Badge>
+          )}
         </div>
 
         <h3 className="font-serif text-lg font-semibold leading-snug">

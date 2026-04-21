@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signal Loader — 50% Gray</title>
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:#fafafa; font-family:system-ui,sans-serif; }
+    .wrap { text-align:center; background:white; border-radius:12px; padding:32px 48px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .wrap p { margin-top:12px; font-size:13px; color:#999; }
+    canvas { border-radius:50%; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="loader" width="112" height="112"></canvas>
+    <p>Loading more&hellip;</p>
+  </div>
+  <script>
+    const canvas=document.getElementById("loader"),ctx=canvas.getContext("2d"),size=112,r=size/2,scale=size/32;
+    const CURVES=[{start:[4,16],cp1:[6,16],cp2:[7.5,13],end:[9,13]},{start:[9,13],cp1:[10.5,13],cp2:[11,17],end:[12.5,17]},{start:[12.5,17],cp1:[14,17],cp2:[14,9],end:[16,9]},{start:[16,9],cp1:[18,9],cp2:[16.5,19],end:[18.5,19]},{start:[18.5,19],cp1:[20,19],cp2:[19.5,13],end:[21,13]},{start:[21,13],cp1:[22.5,13],cp2:[23,16],end:[26,16]}];
+    function cb(t,p0,p1,p2,p3){const m=1-t;return m*m*m*p0+3*m*m*t*p1+3*m*t*t*p2+t*t*t*p3}
+    const pts=[];for(const c of CURVES)for(let i=0;i<=60;i++){if(pts.length>0&&i===0)continue;const t=i/60;pts.push({x:cb(t,c.start[0],c.cp1[0],c.cp2[0],c.end[0])*scale,y:cb(t,c.start[1],c.cp1[1],c.cp2[1],c.end[1])*scale})}
+    const al=[0];for(let i=1;i<pts.length;i++){const dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y;al.push(al[i-1]+Math.sqrt(dx*dx+dy*dy))}const tl=al[al.length-1];
+    function gp(len){if(len<=0)return pts[0];if(len>=tl)return pts[pts.length-1];let lo=0,hi=al.length-1;while(lo<hi-1){const m=(lo+hi)>>1;al[m]<len?lo=m:hi=m}const s=al[hi]-al[lo],f=s>0?(len-al[lo])/s:0;return{x:pts[lo].x+(pts[hi].x-pts[lo].x)*f,y:pts[lo].y+(pts[hi].y-pts[lo].y)*f}}
+    const dur=800,tail=tl*.45,seg=80,lw=2*(size/56);let st=null;
+    function draw(ts){if(!st)st=ts;const t=((ts-st)%dur)/dur,hd=t*(tl+tail*.3);ctx.clearRect(0,0,size,size);ctx.beginPath();ctx.arc(r,r,r,0,Math.PI*2);ctx.fillStyle="#B3B3B3";ctx.fill();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.strokeStyle="rgba(255,255,255,0.08)";ctx.lineWidth=lw;ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke();for(let i=0;i<seg;i++){const f=i/seg,nf=(i+1)/seg,sd=hd-tail*(1-f),ed=hd-tail*(1-nf);if(ed<0||sd>tl)continue;const cs=Math.max(0,Math.min(tl,sd)),ce=Math.max(0,Math.min(tl,ed));if(ce-cs<.1)continue;const p1=gp(cs),p2=gp(ce),a=nf*nf;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.strokeStyle=`rgba(255,255,255,${a})`;ctx.lineWidth=lw;ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke()}requestAnimationFrame(draw)}
+    requestAnimationFrame(draw);
+  </script>
+</body>
+</html>

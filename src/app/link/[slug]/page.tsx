@@ -46,7 +46,7 @@ function PromptBlock({ prompt }: { prompt: Prompt }) {
       <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/50">
         <span className="text-sm font-medium">{prompt.title}</span>
         <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 text-xs">
-          Copy
+          Copy prompt
         </Button>
       </div>
       <pre className="p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed overflow-x-auto">
