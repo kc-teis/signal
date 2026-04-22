@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIES } from "@/lib/constants";
 import { Loader2, FolderOpen, X } from "lucide-react";
+import { getContributorCookies } from "@/lib/cookies";
 
 interface ParsedPrompt {
   filename: string;
@@ -30,6 +31,12 @@ export function PromptFolderSubmitForm({ onSuccess }: PromptFolderSubmitFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const cookies = getContributorCookies();
+    if (cookies.name) setContributorName(cookies.name);
+    if (cookies.email) setContributorEmail(cookies.email);
+  }, []);
 
   function toggleCategory(slug: string) {
     setCategorySlugs((prev) =>
@@ -138,9 +145,7 @@ export function PromptFolderSubmitForm({ onSuccess }: PromptFolderSubmitFormProp
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">
-              Your Name <span className="text-destructive">*</span>
-            </label>
+            <label className="text-sm font-medium">Full Name</label>
             <Input
               value={contributorName}
               onChange={(e) => setContributorName(e.target.value)}
@@ -148,13 +153,11 @@ export function PromptFolderSubmitForm({ onSuccess }: PromptFolderSubmitFormProp
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">
-              Your Email <span className="text-destructive">*</span>
-            </label>
+            <label className="text-sm font-medium">Email</label>
             <Input
               value={contributorEmail}
               onChange={(e) => setContributorEmail(e.target.value)}
-              placeholder="jane@example.com"
+              placeholder="jane@athenahealth.com"
               type="email"
             />
           </div>

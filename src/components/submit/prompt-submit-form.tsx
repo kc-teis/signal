@@ -97,6 +97,43 @@ export function PromptSubmitForm({ onSuccess }: PromptSubmitFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label htmlFor="prompt-name" className="text-sm font-medium text-foreground">
+            Full Name
+          </label>
+          <Input
+            id="prompt-name"
+            placeholder="Jane Smith"
+            value={contributorName}
+            onChange={(e) => setContributorName(e.target.value)}
+            aria-invalid={!!errors.contributorName}
+            disabled={isSubmitting}
+          />
+          {errors.contributorName && (
+            <p className="text-sm text-destructive">{errors.contributorName}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="prompt-email" className="text-sm font-medium text-foreground">
+            Email
+          </label>
+          <Input
+            id="prompt-email"
+            type="email"
+            placeholder="jane@athenahealth.com"
+            value={contributorEmail}
+            onChange={(e) => setContributorEmail(e.target.value)}
+            aria-invalid={!!errors.contributorEmail}
+            disabled={isSubmitting}
+          />
+          {errors.contributorEmail && (
+            <p className="text-sm text-destructive">{errors.contributorEmail}</p>
+          )}
+        </div>
+      </div>
+
       <div className="space-y-1.5">
         <label htmlFor="prompt-title" className="text-sm font-medium text-foreground">
           Prompt Title
@@ -153,43 +190,6 @@ export function PromptSubmitForm({ onSuccess }: PromptSubmitFormProps) {
           ))}
         </div>
         {errors.categories && <p className="text-sm text-destructive">{errors.categories}</p>}
-      </div>
-
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="prompt-name" className="text-sm font-medium text-foreground">
-            Full Name
-          </label>
-          <Input
-            id="prompt-name"
-            placeholder="Jane Smith"
-            value={contributorName}
-            onChange={(e) => setContributorName(e.target.value)}
-            aria-invalid={!!errors.contributorName}
-            disabled={isSubmitting}
-          />
-          {errors.contributorName && (
-            <p className="text-sm text-destructive">{errors.contributorName}</p>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
-          <label htmlFor="prompt-email" className="text-sm font-medium text-foreground">
-            Email
-          </label>
-          <Input
-            id="prompt-email"
-            type="email"
-            placeholder="jane@athenahealth.com"
-            value={contributorEmail}
-            onChange={(e) => setContributorEmail(e.target.value)}
-            aria-invalid={!!errors.contributorEmail}
-            disabled={isSubmitting}
-          />
-          {errors.contributorEmail && (
-            <p className="text-sm text-destructive">{errors.contributorEmail}</p>
-          )}
-        </div>
       </div>
 
       <div className="space-y-1.5">

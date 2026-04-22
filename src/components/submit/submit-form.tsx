@@ -44,9 +44,7 @@ export function SubmitForm({ onSuccess }: SubmitFormProps) {
         errs.url = "Please enter a valid URL";
       }
     }
-    if (!contributorName.trim()) {
-      errs.contributorName = "Name is required";
-    }
+    if (!contributorName.trim()) errs.contributorName = "Name is required";
     if (!contributorEmail.trim()) {
       errs.contributorEmail = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contributorEmail)) {
@@ -107,6 +105,43 @@ export function SubmitForm({ onSuccess }: SubmitFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label htmlFor="contributorName" className="text-sm font-medium text-foreground">
+            Full Name
+          </label>
+          <Input
+            id="contributorName"
+            placeholder="Jane Smith"
+            value={contributorName}
+            onChange={(e) => setContributorName(e.target.value)}
+            aria-invalid={!!errors.contributorName}
+            disabled={isSubmitting}
+          />
+          {errors.contributorName && (
+            <p className="text-sm text-destructive">{errors.contributorName}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="contributorEmail" className="text-sm font-medium text-foreground">
+            Email
+          </label>
+          <Input
+            id="contributorEmail"
+            type="email"
+            placeholder="jane@athenahealth.com"
+            value={contributorEmail}
+            onChange={(e) => setContributorEmail(e.target.value)}
+            aria-invalid={!!errors.contributorEmail}
+            disabled={isSubmitting}
+          />
+          {errors.contributorEmail && (
+            <p className="text-sm text-destructive">{errors.contributorEmail}</p>
+          )}
+        </div>
+      </div>
+
       <div className="space-y-1.5">
         <label htmlFor="url" className="text-sm font-medium text-foreground">
           URL
@@ -125,56 +160,8 @@ export function SubmitForm({ onSuccess }: SubmitFormProps) {
         )}
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label
-            htmlFor="contributorName"
-            className="text-sm font-medium text-foreground"
-          >
-            Full Name
-          </label>
-          <Input
-            id="contributorName"
-            placeholder="Jane Smith"
-            value={contributorName}
-            onChange={(e) => setContributorName(e.target.value)}
-            aria-invalid={!!errors.contributorName}
-            disabled={isSubmitting}
-          />
-          {errors.contributorName && (
-            <p className="text-sm text-destructive">{errors.contributorName}</p>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor="contributorEmail"
-            className="text-sm font-medium text-foreground"
-          >
-            Email
-          </label>
-          <Input
-            id="contributorEmail"
-            type="email"
-            placeholder="jane@athenahealth.com"
-            value={contributorEmail}
-            onChange={(e) => setContributorEmail(e.target.value)}
-            aria-invalid={!!errors.contributorEmail}
-            disabled={isSubmitting}
-          />
-          {errors.contributorEmail && (
-            <p className="text-sm text-destructive">
-              {errors.contributorEmail}
-            </p>
-          )}
-        </div>
-      </div>
-
       <div className="space-y-1.5">
-        <label
-          htmlFor="contextNote"
-          className="text-sm font-medium text-foreground"
-        >
+        <label htmlFor="contextNote" className="text-sm font-medium text-foreground">
           Context Note{" "}
           <span className="font-normal text-muted-foreground">(optional)</span>
         </label>
