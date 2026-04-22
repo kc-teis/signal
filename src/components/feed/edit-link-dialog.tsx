@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -33,17 +33,9 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  const handleEscape = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !saving) onCancel();
-    },
-    [saving, onCancel]
-  );
-
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement;
     dialogRef.current?.focus();
-    document.addEventListener("keydown", handleEscape);
     document.body.style.overflow = "hidden";
 
     async function handlePaste(e: ClipboardEvent) {
@@ -69,7 +61,6 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
     document.addEventListener("paste", handlePaste, true);
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
       document.removeEventListener("paste", handlePaste, true);
       document.body.style.overflow = "";
       previousFocusRef.current?.focus();
@@ -120,14 +111,9 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
     }
   }
 
-  function handleBackdropClick(e: React.MouseEvent) {
-    if (e.target === e.currentTarget && !saving) onCancel();
-  }
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={handleBackdropClick}
       role="presentation"
     >
       <div
