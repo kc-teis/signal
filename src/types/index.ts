@@ -55,6 +55,32 @@ export interface FeedResponse {
   totalPages: number;
 }
 
+export interface FolderPrompt {
+  id: string;
+  folderId: string;
+  title: string;
+  body: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface PromptFolder {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  categorySlugs: string[];
+  contributorName: string;
+  contributorEmail: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PromptFolderWithDetails = PromptFolder & {
+  categories: Category[];
+  prompts: FolderPrompt[];
+};
+
 export interface EnrichmentPreview {
   id: string;
   slug: string;

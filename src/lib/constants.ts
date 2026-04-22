@@ -10,7 +10,7 @@ export const CATEGORIES = [
 
 export const CATEGORY_NAMES = CATEGORIES.map((c) => c.name);
 
-export const CONTENT_TYPES = ["ARTICLE", "VIDEO", "PODCAST", "PROMPT"] as const;
+export const CONTENT_TYPES = ["ARTICLE", "VIDEO", "PODCAST", "PROMPT", "PROMPT_FOLDER"] as const;
 
 export const YOUTUBE_REGEX =
   /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;

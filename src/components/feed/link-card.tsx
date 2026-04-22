@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArticleIcon, VideoIcon, PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
+import { FolderOpen } from "lucide-react";
 import type { LinkWithCategory } from "@/types";
 
 function timeAgo(date: string | Date): string {
@@ -37,6 +38,7 @@ export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
   const [imgError, setImgError] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
+  const isFolder = link.contentTypes.includes("PROMPT_FOLDER");
   const isNew = Boolean(
     lastVisit &&
       (new Date(link.updatedAt).getTime() > lastVisit.getTime() ||
@@ -57,15 +59,17 @@ export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
         toast.success("Prompt copied to clipboard");
       }
     } else {
-      const url = `${window.location.origin}/link/${link.slug}`;
-      navigator.clipboard.writeText(url).then(() => {
+      const base = isFolder ? `/folder/${link.slug}` : `/link/${link.slug}`;
+      navigator.clipboard.writeText(`${window.location.origin}${base}`).then(() => {
         toast.success("Permalink copied to clipboard");
       });
     }
   }
 
   function handleCardClick() {
-    if (link.url) {
+    if (isFolder) {
+      window.location.href = `/folder/${link.slug}`;
+    } else if (link.url) {
       window.open(link.url, "_blank", "noopener,noreferrer");
     } else {
       window.location.href = `/link/${link.slug}`;
@@ -80,7 +84,14 @@ export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
       onClick={handleCardClick}
       className="group grid h-full cursor-pointer grid-rows-[auto_1fr_auto] overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10 transition-all hover:ring-foreground/20 hover:shadow-lg"
     >
-      {link.contentTypes.includes("PROMPT") && !link.thumbnailUrl ? (
+      {isFolder ? (
+        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-violet-500/15 via-violet-400/10 to-muted flex flex-col items-center justify-center gap-2">
+          <FolderOpen className="size-10 text-violet-500/40" />
+          <span className="text-sm font-medium text-muted-foreground">
+            {link.summary?.match(/\d+/)?.[0] ?? ""} prompts
+          </span>
+        </div>
+      ) : link.contentTypes.includes("PROMPT") && !link.thumbnailUrl ? (
         <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-muted">
           <pre className="absolute inset-0 px-3 pt-3 overflow-hidden text-[11px] font-mono text-foreground/50 leading-snug whitespace-pre-wrap select-none">
             {link.promptBody ?? link.summary}
@@ -127,9 +138,9 @@ export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
               <span
                 key={ct}
                 className="shrink-0 text-muted-foreground"
-                title={ct === "VIDEO" ? "Video" : ct === "PODCAST" ? "Podcast" : ct === "PROMPT" ? "Prompt" : "Article"}
+                title={ct === "VIDEO" ? "Video" : ct === "PODCAST" ? "Podcast" : ct === "PROMPT" ? "Prompt" : ct === "PROMPT_FOLDER" ? "Prompt Collection" : "Article"}
               >
-                {ct === "VIDEO" ? <VideoIcon /> : ct === "PODCAST" ? <PodcastIcon /> : ct === "PROMPT" ? <PromptIcon /> : <ArticleIcon />}
+                {ct === "VIDEO" ? <VideoIcon /> : ct === "PODCAST" ? <PodcastIcon /> : ct === "PROMPT" ? <PromptIcon /> : ct === "PROMPT_FOLDER" ? <FolderOpen className="size-4" /> : <ArticleIcon />}
               </span>
             ))}
           </div>

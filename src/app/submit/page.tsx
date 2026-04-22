@@ -7,11 +7,12 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { SubmitForm } from "@/components/submit/submit-form";
 import { PromptSubmitForm } from "@/components/submit/prompt-submit-form";
+import { PromptFolderSubmitForm } from "@/components/submit/prompt-folder-submit-form";
 import { EnrichmentPreview } from "@/components/submit/enrichment-preview";
 import { Button } from "@/components/ui/button";
 import type { EnrichmentPreview as EnrichmentPreviewType } from "@/types";
 
-type Mode = "link" | "prompt";
+type Mode = "link" | "prompt" | "folder";
 type Step = "submit" | "preview" | "success";
 
 export default function SubmitPage() {
@@ -20,17 +21,15 @@ export default function SubmitPage() {
   const [step, setStep] = useState<Step>("submit");
   const [preview, setPreview] = useState<EnrichmentPreviewType | null>(null);
 
-  const handleEnrichmentSuccess = useCallback(
-    (data: EnrichmentPreviewType) => {
-      setPreview(data);
-      setStep("preview");
-    },
-    []
-  );
+  const handleEnrichmentSuccess = useCallback((data: EnrichmentPreviewType) => {
+    setPreview(data);
+    setStep("preview");
+  }, []);
 
   const handlePublish = useCallback(() => {
     setStep("success");
-    toast.success(mode === "prompt" ? "Prompt published" : "Link published");
+    const label = mode === "prompt" ? "Prompt" : mode === "folder" ? "Prompt collection" : "Link";
+    toast.success(`${label} published`);
     queryClient.invalidateQueries({ queryKey: ["links"] });
     queryClient.invalidateQueries({ queryKey: ["contributors"] });
   }, [mode, queryClient]);
@@ -49,38 +48,34 @@ export default function SubmitPage() {
       title: "Submit a Prompt",
       subtitle: "Share an AI prompt with the team. It will be published directly to the feed.",
     },
+    folder: {
+      title: "Submit a Prompt Collection",
+      subtitle: "Select a folder of .md or .txt files. AI will generate titles for each prompt.",
+    },
   };
 
   const current = descriptions[mode];
+  const successLabel = mode === "prompt" ? "prompt" : mode === "folder" ? "collection" : "link";
 
   return (
     <div className="mx-auto max-w-xl">
       {step === "submit" && (
         <div className="mb-6 flex gap-1 rounded-md border p-0.5 w-fit" role="tablist" aria-label="Submission type">
-          <button
-            role="tab"
-            aria-selected={mode === "link"}
-            onClick={() => setMode("link")}
-            className={`rounded px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              mode === "link"
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Link
-          </button>
-          <button
-            role="tab"
-            aria-selected={mode === "prompt"}
-            onClick={() => setMode("prompt")}
-            className={`rounded px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              mode === "prompt"
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Prompt
-          </button>
+          {(["link", "prompt", "folder"] as Mode[]).map((m) => (
+            <button
+              key={m}
+              role="tab"
+              aria-selected={mode === m}
+              onClick={() => setMode(m)}
+              className={`rounded px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                mode === m
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {m === "link" ? "Link" : m === "prompt" ? "Prompt" : "Prompt Collection"}
+            </button>
+          ))}
         </div>
       )}
 
@@ -89,9 +84,7 @@ export default function SubmitPage() {
           {step === "submit" ? current.title : step === "preview" ? "Review & Publish" : "Published"}
         </h1>
         {step === "submit" && (
-          <p className="mt-1 text-sm text-muted-foreground">
-            {current.subtitle}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{current.subtitle}</p>
         )}
       </div>
 
@@ -117,6 +110,18 @@ export default function SubmitPage() {
             transition={{ duration: 0.2 }}
           >
             <PromptSubmitForm onSuccess={handlePublish} />
+          </motion.div>
+        )}
+
+        {step === "submit" && mode === "folder" && (
+          <motion.div
+            key="submit-folder"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <PromptFolderSubmitForm onSuccess={handlePublish} />
           </motion.div>
         )}
 
@@ -154,23 +159,21 @@ export default function SubmitPage() {
                 stroke="currentColor"
                 strokeWidth={2}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Your {mode === "prompt" ? "prompt" : "link"} is now live in the feed.
+                Your {successLabel} is now live in the feed.
               </p>
             </div>
             <div className="flex justify-center gap-3">
               <Button variant="outline" onClick={handleStartOver}>
                 Submit Another
               </Button>
-              <Button asChild><Link href="/">Go to Feed</Link></Button>
+              <Button asChild>
+                <Link href="/">Go to Feed</Link>
+              </Button>
             </div>
           </motion.div>
         )}
