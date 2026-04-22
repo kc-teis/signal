@@ -322,6 +322,7 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
     });
     const pageHtml = await response.text();
     const { default: ogs } = await import("open-graph-scraper");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { result } = await (ogs as any)({
       html: pageHtml,
       timeout: 10000,
