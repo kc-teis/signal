@@ -147,6 +147,9 @@ export async function GET(request: NextRequest) {
 
     if (contentTypesParam) {
       const types = contentTypesParam.split(",").map((s) => s.trim());
+      if (types.includes("PROMPT") && !types.includes("PROMPT_FOLDER")) {
+        types.push("PROMPT_FOLDER");
+      }
       query = query.overlaps("content_types", types);
     }
 
