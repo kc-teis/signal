@@ -95,17 +95,18 @@ export async function PATCH(
       .select("id")
       .eq("folder_id", folder.id);
 
-    const existingIds = new Set((existingPrompts ?? []).map((p) => p.id));
-    const incomingIds = new Set(prompts.filter((p) => p.id).map((p) => p.id as string));
+    const existingIds = (existingPrompts ?? []).map((p) => p.id as string);
+    const incomingIdSet = new Set(prompts.filter((p) => p.id).map((p) => p.id as string));
 
     // Delete prompts that were removed
-    const toDelete = [...existingIds].filter((id) => !incomingIds.has(id));
+    const toDelete = existingIds.filter((id) => !incomingIdSet.has(id));
     if (toDelete.length > 0) {
       await supabase.from("folder_prompts").delete().in("id", toDelete);
     }
 
+    const existingIdSet = new Set(existingIds);
     // Update existing prompts
-    const toUpdate = prompts.filter((p) => p.id && existingIds.has(p.id));
+    const toUpdate = prompts.filter((p) => p.id && existingIdSet.has(p.id));
     for (const p of toUpdate) {
       await supabase
         .from("folder_prompts")
