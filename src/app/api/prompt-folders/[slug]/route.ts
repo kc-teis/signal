@@ -117,7 +117,7 @@ export async function PATCH(
     const toInsert = prompts.filter((p) => !p.id);
     if (toInsert.length > 0) {
       await supabase.from("folder_prompts").insert(
-        toInsert.map((p, i) => ({
+        toInsert.map((p) => ({
           id: nanoid(),
           folder_id: folder.id,
           title: p.title.trim(),
