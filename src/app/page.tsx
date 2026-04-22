@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLinks, type LinkFilters } from "@/hooks/use-links";
 import { FilterBar } from "@/components/feed/filter-bar";
+import { SearchBar } from "@/components/feed/search-bar";
 import { FeedGrid, type ViewMode } from "@/components/feed/feed-grid";
 import { CATEGORIES } from "@/lib/constants";
 import type { ContributorSummary } from "@/types";
@@ -14,6 +15,7 @@ export default function FeedPage() {
     categories: [],
     contributor: "",
     contentTypes: [],
+    search: "",
     sort: "newest",
   });
   const [lastVisit, setLastVisit] = useState<Date | null>(null);
@@ -57,11 +59,13 @@ export default function FeedPage() {
       categories: [],
       contributor: "",
       contentTypes: [],
+      search: "",
       sort: "newest",
     });
   }
 
   const allLinks = data?.pages.flatMap((page) => page.links) ?? [];
+  const totalCount = data?.pages[0]?.total ?? undefined;
 
   const handleLoadMore = useCallback(() => {
     fetchNextPage();
@@ -69,6 +73,13 @@ export default function FeedPage() {
 
   return (
     <div className="space-y-6">
+      <SearchBar
+        value={filters.search ?? ""}
+        onChange={(v) => updateFilter("search", v)}
+        resultCount={filters.search ? totalCount : undefined}
+        isLoading={isLoading}
+      />
+
       <div className="flex items-center justify-between">
         <FilterBar
           categories={[...CATEGORIES]}

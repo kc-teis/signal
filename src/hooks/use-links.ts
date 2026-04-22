@@ -6,6 +6,7 @@ export interface LinkFilters {
   categories?: string[];
   contributor?: string;
   contentTypes?: string[];
+  search?: string;
   sort?: string;
 }
 
@@ -19,6 +20,7 @@ async function fetchLinksPage(
   if (filters.contributor) params.set("contributor", filters.contributor);
   if (filters.contentTypes && filters.contentTypes.length > 0)
     params.set("contentTypes", filters.contentTypes.join(","));
+  if (filters.search) params.set("search", filters.search);
   if (filters.sort) params.set("sort", filters.sort);
   params.set("page", String(page));
   params.set("limit", String(DEFAULT_PAGE_SIZE));

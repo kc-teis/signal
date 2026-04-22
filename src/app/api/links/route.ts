@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { categories: categoriesParam, contributor, contentTypes: contentTypesParam, sort, page, limit } =
+    const { categories: categoriesParam, contributor, contentTypes: contentTypesParam, search, sort, page, limit } =
       parsed.data;
 
     let query = supabase
@@ -143,6 +143,13 @@ export async function GET(request: NextRequest) {
 
     if (contributor) {
       query = query.eq("contributor_email", contributor);
+    }
+
+    if (search) {
+      const q = search.trim();
+      query = query.or(
+        `title.ilike.%${q}%,summary.ilike.%${q}%,context_note.ilike.%${q}%`
+      );
     }
 
     if (contentTypesParam) {
