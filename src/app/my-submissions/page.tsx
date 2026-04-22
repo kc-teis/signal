@@ -114,7 +114,7 @@ export default function MySubmissionsPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (link.contentTypes.includes("PROMPT_FOLDER")) {
-                        window.location.href = `/folder/${link.slug}`;
+                        window.location.href = `/folder/${link.slug}?edit=true`;
                       } else {
                         setEditingLink(link);
                       }

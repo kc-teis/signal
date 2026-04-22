@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -113,6 +113,16 @@ export default function FolderDetailPage({ params }: { params: { slug: string } 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
+  const enterEditMode = useCallback((f: PromptFolderWithDetails) => {
+    setEditTitle(f.title);
+    setEditDescription(f.description ?? "");
+    setEditCategorySlugs([...f.categorySlugs]);
+    setEditPrompts(f.prompts.map((p) => ({ id: p.id, title: p.title, body: p.body })));
+    setSaveError("");
+    setShowAddForm(false);
+    setEditing(true);
+  }, []);
+
   useEffect(() => {
     async function load() {
       try {
@@ -120,6 +130,10 @@ export default function FolderDetailPage({ params }: { params: { slug: string } 
         if (!res.ok) throw new Error("Not found");
         const data = await res.json();
         setFolder(data);
+        if (new URLSearchParams(window.location.search).get("edit") === "true") {
+          enterEditMode(data);
+          window.history.replaceState({}, "", `/folder/${slug}`);
+        }
       } catch {
         setLoadError(true);
       } finally {
@@ -127,20 +141,7 @@ export default function FolderDetailPage({ params }: { params: { slug: string } 
       }
     }
     load();
-  }, [slug]);
-
-  function enterEditMode() {
-    if (!folder) return;
-    setEditTitle(folder.title);
-    setEditDescription(folder.description ?? "");
-    setEditCategorySlugs([...folder.categorySlugs]);
-    setEditPrompts(
-      folder.prompts.map((p) => ({ id: p.id, title: p.title, body: p.body }))
-    );
-    setSaveError("");
-    setShowAddForm(false);
-    setEditing(true);
-  }
+  }, [slug, enterEditMode]);
 
   function cancelEdit() {
     setEditing(false);
@@ -405,9 +406,8 @@ export default function FolderDetailPage({ params }: { params: { slug: string } 
           <span className="text-muted-foreground">Submitted {formatDate(folder.createdAt)}</span>
         </div>
 
-        <div className="flex gap-3 pt-1">
+        <div className="pt-1">
           <Button variant="outline" onClick={handleCopyPermalink}>Copy Permalink</Button>
-          <Button variant="outline" onClick={enterEditMode}>Edit Collection</Button>
         </div>
       </div>
 
