@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseNoCache as supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +52,9 @@ export async function GET() {
       (a, b) => b.linkCount - a.linkCount
     );
 
-    return NextResponse.json(contributors);
+    return NextResponse.json(contributors, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (error) {
     console.error("GET /api/contributors error:", error);
     return NextResponse.json(
