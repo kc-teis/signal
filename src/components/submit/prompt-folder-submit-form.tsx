@@ -51,7 +51,11 @@ export function PromptFolderSubmitForm({ onSuccess }: PromptFolderSubmitFormProp
     const files = Array.from(e.target.files ?? []).filter(
       (f) => f.name.endsWith(".md") || f.name.endsWith(".txt")
     );
-    if (!files.length) return;
+    if (!files.length) {
+      setError("No .md or .txt files found in that folder. Please select a folder containing prompt files in one of those formats.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     setIsEnriching(true);
     setError("");
@@ -188,6 +192,12 @@ export function PromptFolderSubmitForm({ onSuccess }: PromptFolderSubmitFormProp
           className="hidden"
           onChange={handleFolderSelect}
         />
+
+        {error && (
+          <p className="rounded-lg border border-destructive/50 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
       </div>
     );
   }

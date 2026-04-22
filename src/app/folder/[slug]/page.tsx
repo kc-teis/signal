@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
 import type { PromptFolderWithDetails, FolderPrompt } from "@/types";
 
@@ -18,23 +19,42 @@ function formatDate(date: string | Date): string {
 }
 
 function PromptCard({ prompt }: { prompt: FolderPrompt }) {
-  function handleCopy() {
+  const [expanded, setExpanded] = useState(false);
+
+  function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
     navigator.clipboard.writeText(prompt.body).then(() => {
       toast.success("Prompt copied to clipboard");
     });
   }
 
   return (
-    <div className="rounded-lg border bg-muted/30 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/50">
+    <div className="rounded-lg border overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted/80 transition-colors text-left"
+      >
         <span className="text-sm font-medium">{prompt.title}</span>
-        <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 text-xs">
-          Copy prompt
-        </Button>
-      </div>
-      <pre className="p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed overflow-x-auto">
-        {prompt.body}
-      </pre>
+        <div className="flex items-center gap-2 shrink-0 ml-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopy}
+            className="h-7 text-xs"
+          >
+            Copy prompt
+          </Button>
+          <ChevronDown
+            className={`size-4 text-muted-foreground transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+          />
+        </div>
+      </button>
+      {expanded && (
+        <pre className="p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed overflow-x-auto bg-muted/30">
+          {prompt.body}
+        </pre>
+      )}
     </div>
   );
 }
