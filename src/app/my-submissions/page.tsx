@@ -113,7 +113,11 @@ export default function MySubmissionsPage() {
                     className="h-7 text-xs shadow-sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setEditingLink(link);
+                      if (link.contentTypes.includes("PROMPT_FOLDER")) {
+                        window.location.href = `/folder/${link.slug}`;
+                      } else {
+                        setEditingLink(link);
+                      }
                     }}
                   >
                     Edit
