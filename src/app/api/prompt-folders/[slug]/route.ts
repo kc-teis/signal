@@ -23,7 +23,7 @@ export async function GET(
     .from("folder_prompts")
     .select("*")
     .eq("folder_id", folder.id)
-    .order("sort_order", { ascending: true });
+    .order("title", { ascending: true });
 
   const categories = CATEGORIES.filter((c) =>
     (folder.category_slugs as string[]).includes(c.slug)
