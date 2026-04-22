@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FolderOpen } from "lucide-react";
 import { PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
 import type { LinkWithCategory } from "@/types";
 
@@ -36,6 +37,7 @@ interface LinkListItemProps {
 export function LinkListItem({ link, index = 0, lastVisit }: LinkListItemProps) {
   const [imgError, setImgError] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const isFolder = link.contentTypes.includes("PROMPT_FOLDER");
   const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
   const isNew = Boolean(
     lastVisit &&
@@ -58,7 +60,8 @@ export function LinkListItem({ link, index = 0, lastVisit }: LinkListItemProps) 
         toast.success("Prompt copied to clipboard");
       }
     } else {
-      const url = `${window.location.origin}/link/${link.slug}`;
+      const path = isFolder ? `/folder/${link.slug}` : `/link/${link.slug}`;
+      const url = `${window.location.origin}${path}`;
       navigator.clipboard.writeText(url).then(() => {
         toast.success("Permalink copied");
       });
@@ -67,9 +70,9 @@ export function LinkListItem({ link, index = 0, lastVisit }: LinkListItemProps) 
 
   return (
     <motion.a
-      href={link.url ?? `/link/${link.slug}`}
-      target={link.url ? "_blank" : "_self"}
-      rel={link.url ? "noopener noreferrer" : undefined}
+      href={isFolder ? `/folder/${link.slug}` : (link.url ?? `/link/${link.slug}`)}
+      target={link.url && !isFolder ? "_blank" : "_self"}
+      rel={link.url && !isFolder ? "noopener noreferrer" : undefined}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.03 }}
@@ -83,6 +86,10 @@ export function LinkListItem({ link, index = 0, lastVisit }: LinkListItemProps) 
           onError={() => setImgError(true)}
           className="h-16 w-24 shrink-0 rounded-md object-cover"
         />
+      ) : isFolder ? (
+        <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-violet-500/15 via-violet-400/10 to-muted">
+          <FolderOpen className="size-7 text-violet-600/40" />
+        </div>
       ) : link.contentTypes.includes("PROMPT") ? (
         <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500/15 via-emerald-400/10 to-muted">
           <PromptIcon className="size-7 text-emerald-600/40" />
