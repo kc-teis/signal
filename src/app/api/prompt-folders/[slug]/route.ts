@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { CATEGORIES } from "@/lib/constants";
+import { nanoid } from "nanoid";
 
 export const dynamic = "force-dynamic";
 
@@ -48,4 +49,96 @@ export async function GET(
       createdAt: p.created_at,
     })),
   });
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { slug: string } }
+) {
+  try {
+    const { title, description, categorySlugs, prompts } = await request.json() as {
+      title: string;
+      description?: string;
+      categorySlugs: string[];
+      prompts: { id: string | null; title: string; body: string }[];
+    };
+
+    if (!title?.trim() || !categorySlugs?.length || !prompts?.length) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const { data: folder, error: fetchError } = await supabase
+      .from("prompt_folders")
+      .select("id")
+      .eq("slug", params.slug)
+      .single();
+
+    if (fetchError || !folder) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Update the folder wrapper
+    const { error: folderError } = await supabase
+      .from("prompt_folders")
+      .update({
+        title: title.trim(),
+        description: description?.trim() || null,
+        category_slugs: categorySlugs,
+      })
+      .eq("id", folder.id);
+
+    if (folderError) throw folderError;
+
+    // Reconcile prompts: fetch existing IDs, then upsert/delete
+    const { data: existingPrompts } = await supabase
+      .from("folder_prompts")
+      .select("id")
+      .eq("folder_id", folder.id);
+
+    const existingIds = new Set((existingPrompts ?? []).map((p) => p.id));
+    const incomingIds = new Set(prompts.filter((p) => p.id).map((p) => p.id as string));
+
+    // Delete prompts that were removed
+    const toDelete = [...existingIds].filter((id) => !incomingIds.has(id));
+    if (toDelete.length > 0) {
+      await supabase.from("folder_prompts").delete().in("id", toDelete);
+    }
+
+    // Update existing prompts
+    const toUpdate = prompts.filter((p) => p.id && existingIds.has(p.id));
+    for (const p of toUpdate) {
+      await supabase
+        .from("folder_prompts")
+        .update({ title: p.title.trim(), body: p.body.trim(), sort_order: prompts.indexOf(p) })
+        .eq("id", p.id as string);
+    }
+
+    // Insert new prompts
+    const toInsert = prompts.filter((p) => !p.id);
+    if (toInsert.length > 0) {
+      await supabase.from("folder_prompts").insert(
+        toInsert.map((p, i) => ({
+          id: nanoid(),
+          folder_id: folder.id,
+          title: p.title.trim(),
+          body: p.body.trim(),
+          sort_order: prompts.indexOf(p),
+        }))
+      );
+    }
+
+    // Keep the links record in sync
+    const summary = description?.trim() ||
+      `A collection of ${prompts.length} prompt${prompts.length === 1 ? "" : "s"}.`;
+
+    await supabase
+      .from("links")
+      .update({ title: title.trim(), summary, category_slugs: categorySlugs })
+      .eq("slug", params.slug);
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("PATCH /api/prompt-folders/[slug] error:", error);
+    return NextResponse.json({ error: "Failed to update collection" }, { status: 500 });
+  }
 }
