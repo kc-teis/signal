@@ -3,6 +3,8 @@ import { Resend } from "resend";
 import { getDigestLinks, generateDigestHtml } from "@/lib/digest";
 import type { LinkWithCategory } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
