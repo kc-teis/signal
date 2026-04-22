@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CATEGORIES } from "@/lib/constants";
 import type { LinkWithCategory } from "@/types";
+import { ImageIcon, Loader2 } from "lucide-react";
 
 interface EditLinkDialogProps {
   link: LinkWithCategory;
@@ -25,6 +27,8 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
   const [contentTypes, setContentTypes] = useState<string[]>(
     link.contentTypes ?? []
   );
+  const [thumbnailUrl, setThumbnailUrl] = useState(link.thumbnailUrl ?? null);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [saving, setSaving] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -42,8 +46,31 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
     document.addEventListener("keydown", handleEscape);
     document.body.style.overflow = "hidden";
 
+    async function handlePaste(e: ClipboardEvent) {
+      const file = Array.from(e.clipboardData?.items ?? [])
+        .find((item) => item.type.startsWith("image/"))
+        ?.getAsFile();
+      if (!file) return;
+      e.preventDefault();
+      setIsUploadingThumbnail(true);
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const res = await fetch("/api/thumbnails", { method: "POST", body: form });
+        if (!res.ok) throw new Error("Upload failed");
+        const { url } = await res.json();
+        setThumbnailUrl(url);
+      } catch {
+        toast.error("Thumbnail upload failed");
+      } finally {
+        setIsUploadingThumbnail(false);
+      }
+    }
+    document.addEventListener("paste", handlePaste);
+
     return () => {
       document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("paste", handlePaste);
       document.body.style.overflow = "";
       previousFocusRef.current?.focus();
     };
@@ -77,7 +104,7 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
           summary,
           categorySlugs,
           contentTypes,
-          thumbnailUrl: link.thumbnailUrl,
+          thumbnailUrl,
           contextNote: contextNote || null,
         }),
       });
@@ -123,6 +150,29 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
         </div>
 
         <p className="text-xs text-muted-foreground truncate">{link.url}</p>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Thumbnail</label>
+          <div className="group relative h-24 w-40 overflow-hidden rounded-lg border bg-muted">
+            {isUploadingThumbnail ? (
+              <div className="flex h-full w-full items-center justify-center">
+                <Loader2 className="size-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : thumbnailUrl ? (
+              <>
+                <Image src={thumbnailUrl} alt="Thumbnail" fill className="object-cover" unoptimized />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  <p className="px-2 text-center text-xs text-white">Paste to replace</p>
+                </div>
+              </>
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
+                <ImageIcon className="size-6" />
+                <p className="px-2 text-center text-xs">⌘V to paste</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="space-y-1.5">
           <label htmlFor="edit-title" className="text-sm font-medium">Title</label>

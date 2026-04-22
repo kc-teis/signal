@@ -198,10 +198,107 @@ function extractJsonLdImage(html: string, baseUrl: string): string | null {
   return null;
 }
 
+function extractMetaContent(html: string, property: string): string | null {
+  // Matches both property="..." and name="..."
+  const regex = new RegExp(
+    `<meta[^>]+(?:property|name)=["']${property}["'][^>]+content=["']([^"']+)["']`,
+    "i"
+  );
+  let m = regex.exec(html);
+  if (m) return m[1];
+  // Also try content before property/name
+  const regex2 = new RegExp(
+    `<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${property}["']`,
+    "i"
+  );
+  m = regex2.exec(html);
+  return m ? m[1] : null;
+}
+
+async function scrapeYouTube(url: string, youtubeId: string): Promise<OGResult> {
+  const thumbnail = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+
+  let title = "Untitled";
+  let description = "";
+
+  // oEmbed: most reliable source for title, no API key needed
+  try {
+    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+    const oembedRes = await fetch(oembedUrl);
+    if (oembedRes.ok) {
+      const data = await oembedRes.json();
+      if (data.title) title = data.title;
+    }
+  } catch {
+    // fall through to page HTML
+  }
+
+  // Page HTML: extract og:description (YouTube renders this server-side)
+  // and shortDescription from ytInitialData as a longer fallback
+  try {
+    const pageRes = await fetch(url.split("#")[0], {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      redirect: "follow",
+    });
+    const html = await pageRes.text();
+
+    // Use og:title as fallback if oEmbed didn't work
+    if (title === "Untitled") {
+      const ogTitle = extractMetaContent(html, "og:title");
+      if (ogTitle) title = ogTitle;
+    }
+
+    // og:description is reliably present in YouTube's server-rendered HTML
+    const ogDesc = extractMetaContent(html, "og:description");
+    if (ogDesc) {
+      description = ogDesc;
+    } else {
+      // Fallback: parse shortDescription out of ytInitialData JSON blob
+      const match = html.match(/"shortDescription":"((?:[^"\\]|\\.)*)"/);
+      if (match) {
+        description = match[1]
+          .replace(/\\n/g, " ")
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, "\\")
+          .trim()
+          .slice(0, 500);
+      }
+    }
+  } catch {
+    // page fetch failed; use whatever we have
+  }
+
+  console.log("[YouTube scrape]", { youtubeId, title, descriptionLength: description.length });
+
+  return {
+    title,
+    description,
+    image: thumbnail,
+    articleImage: null,
+    articleText: description || null,
+    siteName: "YouTube",
+    isYouTube: true,
+    youtubeId,
+    isPodcast: false,
+    spotifyEpisodeId: null,
+    applePodcastId: null,
+    audioUrl: null,
+    podcastMeta: null,
+  };
+}
+
 export async function scrapeOpenGraph(url: string): Promise<OGResult> {
   const youtubeMatch = url.match(YOUTUBE_REGEX);
   const isYouTube = !!youtubeMatch;
   const youtubeId = youtubeMatch?.[1] ?? null;
+
+  if (isYouTube && youtubeId) {
+    return scrapeYouTube(url, youtubeId);
+  }
 
   const spotifyMatch = url.match(SPOTIFY_EPISODE_REGEX);
   const spotifyEpisodeId = spotifyMatch?.[1] ?? null;
@@ -224,8 +321,8 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
       redirect: "follow",
     });
     const pageHtml = await response.text();
-    const ogs = (await import("open-graph-scraper")) as any;
-    const { result } = await ogs({
+    const { default: ogs } = await import("open-graph-scraper");
+    const { result } = await (ogs as any)({
       html: pageHtml,
       timeout: 10000,
     });
@@ -272,14 +369,12 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
     return {
       title: result.ogTitle || result.dcTitle || "Untitled",
       description: result.ogDescription || result.dcDescription || "",
-      image: isYouTube && youtubeId
-        ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
-        : ogOrTwitter,
+      image: ogOrTwitter,
       articleImage: ogOrTwitter ? null : articleImage,
       articleText,
       siteName: result.ogSiteName || null,
-      isYouTube,
-      youtubeId,
+      isYouTube: false,
+      youtubeId: null,
       isPodcast,
       spotifyEpisodeId,
       applePodcastId,
@@ -291,14 +386,12 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
     return {
       title: "Untitled",
       description: "",
-      image: isYouTube && youtubeId
-        ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`
-        : null,
+      image: null,
       articleImage: null,
       articleText: null,
       siteName: null,
-      isYouTube,
-      youtubeId,
+      isYouTube: false,
+      youtubeId: null,
       isPodcast,
       spotifyEpisodeId,
       applePodcastId,

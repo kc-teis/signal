@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,13 +35,39 @@ export function EnrichmentPreview({
   const [contentTypes, setContentTypes] = useState<string[]>(
     preview.contentTypes
   );
-  const [thumbnailUrl] = useState(preview.thumbnailUrl);
+  const [thumbnailUrl, setThumbnailUrl] = useState(preview.thumbnailUrl);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [attachedPrompts, setAttachedPrompts] = useState<{ title: string; body: string }[]>([]);
   const [showPromptForm, setShowPromptForm] = useState(false);
   const [newPromptTitle, setNewPromptTitle] = useState("");
   const [newPromptBody, setNewPromptBody] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const [apiError, setApiError] = useState("");
+
+  useEffect(() => {
+    async function handlePaste(e: ClipboardEvent) {
+      const file = Array.from(e.clipboardData?.items ?? [])
+        .find((item) => item.type.startsWith("image/"))
+        ?.getAsFile();
+      if (!file) return;
+      e.preventDefault();
+      setIsUploadingThumbnail(true);
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const res = await fetch("/api/thumbnails", { method: "POST", body: form });
+        if (!res.ok) throw new Error("Upload failed");
+        const { url } = await res.json();
+        setThumbnailUrl(url);
+      } catch {
+        // thumbnail stays as-is
+      } finally {
+        setIsUploadingThumbnail(false);
+      }
+    }
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, []);
 
   function toggleCategory(slug: string) {
     setCategorySlugs((prev) =>
@@ -99,18 +125,28 @@ export function EnrichmentPreview({
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-4">
-        <div className="relative h-24 w-40 shrink-0 overflow-hidden rounded-lg border bg-muted">
-          {thumbnailUrl ? (
-            <Image
-              src={thumbnailUrl}
-              alt="Thumbnail preview"
-              fill
-              className="object-cover"
-              unoptimized
-            />
+        <div className="group relative h-24 w-40 shrink-0 overflow-hidden rounded-lg border bg-muted">
+          {isUploadingThumbnail ? (
+            <div className="flex h-full w-full items-center justify-center">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : thumbnailUrl ? (
+            <>
+              <Image
+                src={thumbnailUrl}
+                alt="Thumbnail preview"
+                fill
+                className="object-cover"
+                unoptimized
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                <p className="px-2 text-center text-xs text-white">Paste to replace</p>
+              </div>
+            </>
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-              <ImageIcon className="size-8" />
+            <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
+              <ImageIcon className="size-6" />
+              <p className="px-2 text-center text-xs">⌘V to paste</p>
             </div>
           )}
         </div>
