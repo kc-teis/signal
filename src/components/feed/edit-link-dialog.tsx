@@ -66,11 +66,11 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
         setIsUploadingThumbnail(false);
       }
     }
-    document.addEventListener("paste", handlePaste);
+    document.addEventListener("paste", handlePaste, true);
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      document.removeEventListener("paste", handlePaste);
+      document.removeEventListener("paste", handlePaste, true);
       document.body.style.overflow = "";
       previousFocusRef.current?.focus();
     };

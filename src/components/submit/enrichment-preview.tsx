@@ -65,8 +65,8 @@ export function EnrichmentPreview({
         setIsUploadingThumbnail(false);
       }
     }
-    document.addEventListener("paste", handlePaste);
-    return () => document.removeEventListener("paste", handlePaste);
+    document.addEventListener("paste", handlePaste, true);
+    return () => document.removeEventListener("paste", handlePaste, true);
   }, []);
 
   function toggleCategory(slug: string) {
