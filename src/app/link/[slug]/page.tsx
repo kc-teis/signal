@@ -153,13 +153,13 @@ export default function LinkDetailPage({
           />
         </div>
       ) : link.thumbnailUrl ? (
-        <div className="aspect-video w-full overflow-hidden rounded-xl bg-muted">
+        <a href={link.url ?? undefined} target="_blank" rel="noopener noreferrer" className="block aspect-video w-full overflow-hidden rounded-xl bg-muted">
           <img
             src={link.thumbnailUrl}
             alt={link.title ?? "Link thumbnail"}
             className="h-full w-full object-cover"
           />
-        </div>
+        </a>
       ) : (
         <div className="aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-muted flex items-center justify-center">
           <span className="text-5xl font-bold text-primary/20 select-none">
