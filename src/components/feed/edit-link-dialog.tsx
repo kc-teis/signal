@@ -65,7 +65,7 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
       document.body.style.overflow = "";
       previousFocusRef.current?.focus();
     };
-  }, [handleEscape]);
+  }, []);
 
   function toggleCategory(slug: string) {
     setCategorySlugs((prev) =>
