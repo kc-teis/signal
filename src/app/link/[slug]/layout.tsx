@@ -5,6 +5,9 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   "https://signal-git-main-kc-teis-projects.vercel.app";
 
+const STATIC_OG_IMAGE =
+  "https://qwjjaoayamykpqymvupx.supabase.co/storage/v1/object/public/thumbnails/og-image-v2.png";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export async function generateMetadata({
   params,
@@ -21,7 +24,7 @@ export async function generateMetadata({
 
   const title = link.title || "The Signal";
   const description = link.summary || "Curated articles, videos, and prompts worth your time.";
-  const image = link.thumbnail_url || `${siteUrl}/api/og`;
+  const image = link.thumbnail_url || STATIC_OG_IMAGE;
 
   return {
     title: `${title} — The Signal`,
