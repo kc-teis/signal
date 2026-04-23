@@ -1,7 +1,7 @@
 import { openai } from "./openai";
 import { scrapeOpenGraph, type OGResult } from "./og-scraper";
-import { uploadThumbnail } from "./thumbnail-store";
-import { generateThumbnail } from "./generate-thumbnail";
+import { uploadThumbnail, uploadThumbnailBuffer } from "./thumbnail-store";
+import { buildCardUrl } from "./generate-card";
 import { CATEGORY_NAMES, CATEGORIES } from "./constants";
 
 export interface EnrichmentResult {
@@ -130,20 +130,34 @@ export async function enrichLink(url: string): Promise<EnrichmentResult> {
   }
 
   // Upload thumbnail to Supabase Storage for persistence
-  // Fallback chain: OG/Twitter image → article body image → DALL-E generated
+  // Fallback chain: OG image (if ≥ 15KB) → generated branded card
+  const MIN_THUMBNAIL_BYTES = 15 * 1024;
   let thumbnailUrl: string | null = null;
   const imageSource = og.image || og.articleImage;
 
   if (imageSource) {
-    thumbnailUrl = await uploadThumbnail(imageSource);
-    if (!thumbnailUrl) thumbnailUrl = imageSource;
+    const { url, byteSize } = await uploadThumbnail(imageSource);
+    if (url && byteSize >= MIN_THUMBNAIL_BYTES) {
+      thumbnailUrl = url;
+    }
   }
 
   if (!thumbnailUrl) {
-    const generatedUrl = await generateThumbnail(og.title);
-    if (generatedUrl) {
-      thumbnailUrl = await uploadThumbnail(generatedUrl);
-      if (!thumbnailUrl) thumbnailUrl = generatedUrl;
+    const cardUrl = buildCardUrl({
+      title: og.title,
+      siteName: og.siteName,
+      categorySlugs,
+      contentTypes,
+    });
+    try {
+      const res = await fetch(cardUrl, { signal: AbortSignal.timeout(10000) });
+      if (res.ok) {
+        const buffer = await res.arrayBuffer();
+        const ct = res.headers.get("content-type") ?? "image/png";
+        thumbnailUrl = await uploadThumbnailBuffer(buffer, ct);
+      }
+    } catch (err) {
+      console.error("Card generation failed:", err);
     }
   }
 
