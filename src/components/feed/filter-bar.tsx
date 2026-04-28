@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { ArticleIcon, VideoIcon, PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
 
 interface FilterBarProps {
@@ -18,10 +19,12 @@ interface FilterBarProps {
   selectedContentTypes: string[];
   contributor: string;
   sort: string;
+  expanded?: boolean;
   onCategoriesChange: (slugs: string[]) => void;
   onContentTypesChange: (types: string[]) => void;
   onContributorChange: (value: string) => void;
   onSortChange: (value: string) => void;
+  onExpandedChange?: (expanded: boolean) => void;
   onClear: () => void;
 }
 
@@ -39,10 +42,12 @@ export function FilterBar({
   selectedContentTypes,
   contributor,
   sort,
+  expanded = false,
   onCategoriesChange,
   onContentTypesChange,
   onContributorChange,
   onSortChange,
+  onExpandedChange,
   onClear,
 }: FilterBarProps) {
   const hasFilters =
@@ -140,6 +145,16 @@ export function FilterBar({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
+        {onExpandedChange && (
+          <button
+            type="button"
+            onClick={() => onExpandedChange(!expanded)}
+            className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground w-full sm:w-auto justify-center sm:justify-start"
+          >
+            {expanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+            {expanded ? "Collapse" : "Expand"}
+          </button>
+        )}
         <Select
           value={contributor || "__all__"}
           onValueChange={(val) =>

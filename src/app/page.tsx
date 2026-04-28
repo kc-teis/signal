@@ -6,7 +6,6 @@ import { useLinks, type LinkFilters } from "@/hooks/use-links";
 import { FilterBar } from "@/components/feed/filter-bar";
 import { SearchBar } from "@/components/feed/search-bar";
 import { FeedGrid, type ViewMode } from "@/components/feed/feed-grid";
-import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
 import type { ContributorSummary } from "@/types";
 
@@ -102,22 +101,15 @@ export default function FeedPage() {
           selectedContentTypes={filters.contentTypes ?? []}
           contributor={filters.contributor ?? ""}
           sort={filters.sort ?? "newest"}
+          expanded={expanded}
           onCategoriesChange={(v) => updateFilter("categories", v)}
           onContentTypesChange={(v) => updateFilter("contentTypes", v)}
           onContributorChange={(v) => updateFilter("contributor", v)}
           onSortChange={(v) => updateFilter("sort", v)}
+          onExpandedChange={setExpanded}
           onClear={clearFilters}
         />
 
-        <div className="flex shrink-0 items-start gap-2 self-start">
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            title={expanded ? "Collapse cards" : "Expand cards"}
-            className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {expanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
-            {expanded ? "Collapse" : "Expand"}
-          </button>
         <div className="flex shrink-0 gap-1 self-start rounded-md border p-0.5" role="tablist" aria-label="View mode">
           <button
             role="tab"
@@ -143,7 +135,6 @@ export default function FeedPage() {
           >
             List
           </button>
-        </div>
         </div>
       </div>
 
