@@ -37,13 +37,34 @@ interface LinkCardProps {
 export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
   const [imgError, setImgError] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [isCopyingPrompt, setIsCopyingPrompt] = useState(false);
   const isPrompt = link.contentTypes.includes("PROMPT") && !link.url;
   const isFolder = link.contentTypes.includes("PROMPT_FOLDER");
+  const hasAttachedPrompt = !isPrompt && !isFolder && (link.promptCount ?? 0) === 1;
   const isNew = Boolean(
     lastVisit &&
       (new Date(link.updatedAt).getTime() > lastVisit.getTime() ||
         new Date(link.createdAt).getTime() > lastVisit.getTime())
   );
+
+  async function handleCopyAttachedPrompt(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (isCopyingPrompt) return;
+    setIsCopyingPrompt(true);
+    try {
+      const res = await fetch(`/api/prompts?link_id=${link.id}`);
+      const prompts = await res.json();
+      const body = Array.isArray(prompts) && prompts.length > 0 ? prompts[0].body : null;
+      if (body) {
+        await navigator.clipboard.writeText(body);
+        toast.success("Prompt copied to clipboard");
+      }
+    } catch {
+      toast.error("Failed to copy prompt");
+    } finally {
+      setIsCopyingPrompt(false);
+    }
+  }
 
   async function handleCopyAction(e: React.MouseEvent) {
     e.stopPropagation();
@@ -168,10 +189,22 @@ export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
           >
             {isPrompt ? "Copy prompt" : "Copy link"}
           </Button>
-          {(link.promptCount ?? 0) > 0 && (
+          {hasAttachedPrompt && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyAttachedPrompt}
+              disabled={isCopyingPrompt}
+              className="mb-2 text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <PromptIcon className="size-3" />
+              {isCopyingPrompt ? "Copying..." : "Copy prompt"}
+            </Button>
+          )}
+          {!hasAttachedPrompt && (link.promptCount ?? 0) > 1 && (
             <span className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
               <PromptIcon className="size-3" />
-              {link.promptCount} {link.promptCount === 1 ? "prompt" : "prompts"}
+              {link.promptCount} prompts
             </span>
           )}
         </div>
