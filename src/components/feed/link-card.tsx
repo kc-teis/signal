@@ -139,32 +139,30 @@ export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
       )}
 
       <div className="flex flex-col gap-3 p-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-            {(showAllCategories ? link.categories : link.categories.slice(0, 2)).map((cat) => (
-              <Badge key={cat.slug} variant="secondary" className="shrink-0">
-                {cat.name}
-              </Badge>
-            ))}
-            {link.categories.length > 2 && !showAllCategories && (
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setShowAllCategories(true); }}
-                className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                +{link.categories.length - 2} more
-              </button>
-            )}
-            {link.contentTypes.map((ct) => (
-              <span
-                key={ct}
-                className="shrink-0 text-muted-foreground"
-                title={ct === "VIDEO" ? "Video" : ct === "PODCAST" ? "Podcast" : ct === "PROMPT" ? "Prompt" : ct === "PROMPT_FOLDER" ? "Prompt Collection" : "Article"}
-              >
-                {ct === "VIDEO" ? <VideoIcon /> : ct === "PODCAST" ? <PodcastIcon /> : ct === "PROMPT" ? <PromptIcon /> : ct === "PROMPT_FOLDER" ? <FolderOpen className="size-4" /> : <ArticleIcon />}
-              </span>
-            ))}
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(showAllCategories ? link.categories : link.categories.slice(0, 2)).map((cat) => (
+            <Badge key={cat.slug} variant="secondary" className="shrink-0">
+              {cat.name}
+            </Badge>
+          ))}
+          {link.categories.length > 2 && !showAllCategories && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowAllCategories(true); }}
+              className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              +{link.categories.length - 2} more
+            </button>
+          )}
+          {link.contentTypes.map((ct) => (
+            <span
+              key={ct}
+              className="shrink-0 text-muted-foreground"
+              title={ct === "VIDEO" ? "Video" : ct === "PODCAST" ? "Podcast" : ct === "PROMPT" ? "Prompt" : ct === "PROMPT_FOLDER" ? "Prompt Collection" : "Article"}
+            >
+              {ct === "VIDEO" ? <VideoIcon /> : ct === "PODCAST" ? <PodcastIcon /> : ct === "PROMPT" ? <PromptIcon /> : ct === "PROMPT_FOLDER" ? <FolderOpen className="size-4" /> : <ArticleIcon />}
+            </span>
+          ))}
           {isNew && (
             <Badge variant="default" className="shrink-0">
               New content updated
@@ -172,15 +170,15 @@ export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
           )}
         </div>
 
-        <h3 className="font-serif text-lg font-semibold leading-snug">
+        <h3 className="font-serif text-lg font-semibold leading-snug line-clamp-2">
           {link.title}
         </h3>
 
-        <p className="font-serif text-sm text-muted-foreground leading-relaxed">
+        <p className="font-serif text-sm text-muted-foreground leading-relaxed line-clamp-4">
           {link.summary}
         </p>
 
-        <div className="mt-auto flex items-center gap-2">
+        <div className="mt-auto flex flex-wrap items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
