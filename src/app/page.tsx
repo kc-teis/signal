@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLinks, type LinkFilters } from "@/hooks/use-links";
 import { FilterBar } from "@/components/feed/filter-bar";
 import { SearchBar } from "@/components/feed/search-bar";
 import { FeedGrid, type ViewMode } from "@/components/feed/feed-grid";
+import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
 import type { ContributorSummary } from "@/types";
 
 export default function FeedPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [expanded, setExpanded] = useState(false);
+  const expandedInitialized = useRef(false);
   const [filters, setFilters] = useState<LinkFilters>({
     categories: [],
     contributor: "",
@@ -24,7 +27,15 @@ export default function FeedPage() {
     const saved = window.localStorage.getItem("kh_last_visit");
     setLastVisit(saved ? new Date(saved) : null);
     window.localStorage.setItem("kh_last_visit", new Date().toISOString());
+    const savedExpanded = window.localStorage.getItem("kh_cards_expanded");
+    if (savedExpanded !== null) setExpanded(savedExpanded === "true");
+    expandedInitialized.current = true;
   }, []);
+
+  useEffect(() => {
+    if (!expandedInitialized.current) return;
+    window.localStorage.setItem("kh_cards_expanded", String(expanded));
+  }, [expanded]);
 
   const {
     data,
@@ -98,6 +109,15 @@ export default function FeedPage() {
           onClear={clearFilters}
         />
 
+        <div className="flex shrink-0 items-start gap-2 self-start">
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            title={expanded ? "Collapse cards" : "Expand cards"}
+            className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {expanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+            {expanded ? "Collapse" : "Expand"}
+          </button>
         <div className="flex shrink-0 gap-1 self-start rounded-md border p-0.5" role="tablist" aria-label="View mode">
           <button
             role="tab"
@@ -124,12 +144,14 @@ export default function FeedPage() {
             List
           </button>
         </div>
+        </div>
       </div>
 
       <FeedGrid
         links={allLinks}
         isLoading={isLoading}
         viewMode={viewMode}
+        expanded={expanded}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
         onLoadMore={handleLoadMore}

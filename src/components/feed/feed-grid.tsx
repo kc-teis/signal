@@ -14,6 +14,7 @@ interface FeedGridProps {
   links: LinkWithCategory[];
   isLoading: boolean;
   viewMode?: ViewMode;
+  expanded?: boolean;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
@@ -24,6 +25,7 @@ export function FeedGrid({
   links,
   isLoading,
   viewMode = "grid",
+  expanded = false,
   hasNextPage,
   isFetchingNextPage,
   onLoadMore,
@@ -82,7 +84,7 @@ export function FeedGrid({
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {links.map((link, index) => (
-              <LinkCard key={link.id} link={link} index={index} lastVisit={lastVisit} />
+              <LinkCard key={link.id} link={link} index={index} lastVisit={lastVisit} expanded={expanded} />
             ))}
           </AnimatePresence>
         </div>

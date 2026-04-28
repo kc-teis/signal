@@ -32,9 +32,10 @@ interface LinkCardProps {
   link: LinkWithCategory;
   index: number;
   lastVisit?: Date | null;
+  expanded?: boolean;
 }
 
-export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
+export function LinkCard({ link, index, lastVisit, expanded = false }: LinkCardProps) {
   const [imgError, setImgError] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [isCopyingPrompt, setIsCopyingPrompt] = useState(false);
@@ -170,11 +171,11 @@ export function LinkCard({ link, index, lastVisit }: LinkCardProps) {
           )}
         </div>
 
-        <h3 className="font-serif text-lg font-semibold leading-snug line-clamp-2">
+        <h3 className={`font-serif text-lg font-semibold leading-snug ${expanded ? "" : "line-clamp-2"}`}>
           {link.title}
         </h3>
 
-        <p className="font-serif text-sm text-muted-foreground leading-relaxed line-clamp-4">
+        <p className={`font-serif text-sm text-muted-foreground leading-relaxed ${expanded ? "" : "line-clamp-4"}`}>
           {link.summary}
         </p>
 
