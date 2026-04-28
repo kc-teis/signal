@@ -209,7 +209,10 @@ export function LinkCard({ link, index, lastVisit, expanded = false }: LinkCardP
         </div>
       </div>
 
-      <div className="px-4 py-4 min-h-[5.5rem] flex flex-col justify-center rounded-b-xl" style={{ backgroundColor: "#4E2D82" }}>
+      <div
+        className={`px-4 py-4 flex flex-col justify-center rounded-b-xl ${expanded ? "" : "min-h-[7rem]"}`}
+        style={{ backgroundColor: "#4E2D82" }}
+      >
         <div className="flex items-center justify-between">
           <span className="font-serif text-sm font-medium text-background">
             {link.contributorName}
@@ -219,7 +222,7 @@ export function LinkCard({ link, index, lastVisit, expanded = false }: LinkCardP
           </span>
         </div>
         {link.contextNote && (
-          <p className="mt-0.5 font-serif text-sm font-bold italic text-background/90">
+          <p className={`mt-0.5 font-serif text-sm font-bold italic text-background/90 ${expanded ? "" : "line-clamp-2"}`}>
             &ldquo;{link.contextNote}&rdquo;
           </p>
         )}
