@@ -175,7 +175,7 @@ export function LinkCard({ link, index, lastVisit, expanded = false }: LinkCardP
           {link.title}
         </h3>
 
-        <p className={`font-serif text-sm text-muted-foreground leading-relaxed ${expanded ? "" : "line-clamp-4"}`}>
+        <p className={`font-serif text-sm text-muted-foreground leading-relaxed ${expanded ? "" : "line-clamp-4 min-h-[5.75rem]"}`}>
           {link.summary}
         </p>
 

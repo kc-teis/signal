@@ -152,7 +152,7 @@ export function FilterBar({
             className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground w-full sm:w-auto justify-center sm:justify-start"
           >
             {expanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
-            {expanded ? "Collapse" : "Expand"}
+            {expanded ? "Collapse Card" : "Expand Card"}
           </button>
         )}
         <Select
