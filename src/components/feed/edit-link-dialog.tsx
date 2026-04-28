@@ -97,6 +97,7 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
           contentTypes,
           thumbnailUrl,
           contextNote: contextNote || null,
+          regenerateEnrichment: !thumbnailUrl,
         }),
       });
 
