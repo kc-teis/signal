@@ -19,12 +19,10 @@ interface FilterBarProps {
   selectedContentTypes: string[];
   contributor: string;
   sort: string;
-  expanded?: boolean;
   onCategoriesChange: (slugs: string[]) => void;
   onContentTypesChange: (types: string[]) => void;
   onContributorChange: (value: string) => void;
   onSortChange: (value: string) => void;
-  onExpandedChange?: (expanded: boolean) => void;
   onClear: () => void;
 }
 
@@ -42,12 +40,10 @@ export function FilterBar({
   selectedContentTypes,
   contributor,
   sort,
-  expanded = false,
   onCategoriesChange,
   onContentTypesChange,
   onContributorChange,
   onSortChange,
-  onExpandedChange,
   onClear,
 }: FilterBarProps) {
   const hasFilters =
@@ -178,17 +174,6 @@ export function FilterBar({
           <Button variant="ghost" size="sm" onClick={onClear}>
             Clear all filters
           </Button>
-        )}
-
-        {onExpandedChange && (
-          <button
-            type="button"
-            onClick={() => onExpandedChange(!expanded)}
-            className={`flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors w-full sm:w-auto sm:ml-auto justify-center sm:justify-start ${expanded ? "bg-black text-white border-black hover:bg-neutral-800" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            {expanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
-            {expanded ? "Collapse Cards" : "Expand Cards"}
-          </button>
         )}
       </div>
     </div>
