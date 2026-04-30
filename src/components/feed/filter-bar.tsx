@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { ArticleIcon, VideoIcon, PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
 
 interface FilterBarProps {
