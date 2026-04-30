@@ -145,16 +145,6 @@ export function FilterBar({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
-        {onExpandedChange && (
-          <button
-            type="button"
-            onClick={() => onExpandedChange(!expanded)}
-            className={`flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors w-full sm:w-auto justify-center sm:justify-start ${expanded ? "bg-black text-white border-black hover:bg-neutral-800" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            {expanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
-            {expanded ? "Collapse Cards" : "Expand Cards"}
-          </button>
-        )}
         <Select
           value={contributor || "__all__"}
           onValueChange={(val) =>
@@ -188,6 +178,17 @@ export function FilterBar({
           <Button variant="ghost" size="sm" onClick={onClear}>
             Clear all filters
           </Button>
+        )}
+
+        {onExpandedChange && (
+          <button
+            type="button"
+            onClick={() => onExpandedChange(!expanded)}
+            className={`flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors w-full sm:w-auto sm:ml-auto justify-center sm:justify-start ${expanded ? "bg-black text-white border-black hover:bg-neutral-800" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            {expanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+            {expanded ? "Collapse Cards" : "Expand Cards"}
+          </button>
         )}
       </div>
     </div>
