@@ -27,8 +27,16 @@ export function ContributorCombobox({
   // Bring the whole listbox into view when the search field gains focus —
   // it sits at the bottom of a scrollable modal, so without this the input
   // can be focused while the options below it stay scrolled out of sight.
+  // Deferred two frames because the browser's own focus-into-view scrolling
+  // (which only guarantees the input itself is visible) can otherwise run
+  // after ours and undo it; block:"end" reliably reveals the full list
+  // rather than a "nearest" no-op if it's judged already close enough.
   function handleInputFocus() {
-    listRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        listRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+      });
+    });
   }
 
   const filtered = useMemo(() => {
