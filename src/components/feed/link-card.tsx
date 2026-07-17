@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArticleIcon, VideoIcon, PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
 import { FolderOpen } from "lucide-react";
+import { UpvoteButton } from "@/components/feed/upvote-button";
 import type { LinkWithCategory } from "@/types";
 
 function timeAgo(date: string | Date): string {
@@ -180,6 +181,14 @@ export function LinkCard({ link, index, lastVisit, expanded = false }: LinkCardP
         </p>
 
         <div className="mt-auto flex flex-wrap items-center gap-1">
+          {!isFolder && (
+            <UpvoteButton
+              slug={link.slug}
+              count={link.upvoteCount}
+              hasUpvoted={link.hasUpvoted ?? false}
+              className="mb-2 mr-1"
+            />
+          )}
           <Button
             variant="ghost"
             size="sm"

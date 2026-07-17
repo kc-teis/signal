@@ -32,6 +32,7 @@ function mapLink(link: any, categories: Category[]) {
     contextNote: link.context_note,
     metadata: link.metadata,
     status: link.status,
+    upvoteCount: link.upvote_count ?? 0,
     createdAt: link.created_at,
     updatedAt: link.updated_at,
     categories,
@@ -161,9 +162,13 @@ export async function GET(request: NextRequest) {
       query = query.overlaps("content_types", types);
     }
 
-    query = query.order("created_at", {
-      ascending: sort === "oldest",
-    });
+    if (sort === "mostUpvoted") {
+      query = query
+        .order("upvote_count", { ascending: false })
+        .order("created_at", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: sort === "oldest" });
+    }
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -207,6 +212,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Determine which of these links the current device has already upvoted
+    const deviceId = request.cookies.get("kh_device_id")?.value;
+    const upvotedLinkIds = new Set<string>();
+    if (deviceId && linkIds.length > 0) {
+      const { data: deviceUpvotes } = await supabase
+        .from("upvotes")
+        .select("link_id")
+        .eq("device_id", deviceId)
+        .in("link_id", linkIds);
+      for (const u of deviceUpvotes ?? []) upvotedLinkIds.add(u.link_id);
+    }
+
     const mappedLinks = (links ?? []).map((link: any) => {
       const linkCategories = (link.category_slugs ?? [])
         .map((s: string) => categoryMap.get(s))
@@ -215,6 +232,7 @@ export async function GET(request: NextRequest) {
         ...mapLink(link, linkCategories),
         promptCount: promptCountMap.get(link.id) ?? 0,
         promptBody: promptBodyMap.get(link.id) ?? null,
+        hasUpvoted: upvotedLinkIds.has(link.id),
       };
     });
 

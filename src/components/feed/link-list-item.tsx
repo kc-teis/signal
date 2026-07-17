@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FolderOpen } from "lucide-react";
 import { PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
+import { UpvoteButton } from "@/components/feed/upvote-button";
 import type { LinkWithCategory } from "@/types";
 
 function timeAgo(date: string | Date): string {
@@ -149,6 +150,13 @@ export function LinkListItem({ link, index = 0, lastVisit }: LinkListItemProps) 
             <span className="text-xs text-muted-foreground">
               {timeAgo(link.createdAt)}
             </span>
+            {!isFolder && (
+              <UpvoteButton
+                slug={link.slug}
+                count={link.upvoteCount}
+                hasUpvoted={link.hasUpvoted ?? false}
+              />
+            )}
             {hasAttachedPrompt && (
               <Button
                 variant="ghost"

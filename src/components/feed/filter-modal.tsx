@@ -32,6 +32,7 @@ const CONTENT_TYPES = [
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest first", description: "Most recently submitted links first" },
   { value: "oldest", label: "Oldest first", description: "Earliest submitted links first" },
+  { value: "mostUpvoted", label: "Most upvoted", description: "Highest upvote count first" },
 ] as const;
 
 export function FilterModal({

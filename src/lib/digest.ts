@@ -52,6 +52,7 @@ export async function getDigestLinks(
       contextNote: link.context_note,
       metadata: link.metadata,
       status: link.status,
+      upvoteCount: link.upvote_count ?? 0,
       createdAt: link.created_at,
       updatedAt: link.updated_at,
       categories,

@@ -30,6 +30,7 @@ export interface Link {
   contextNote: string | null;
   metadata: Record<string, unknown> | null;
   status: "DRAFT" | "PUBLISHED";
+  upvoteCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +40,7 @@ export type LinkWithCategory = Link & {
   promptCount?: number;
   promptBody?: string | null;
   prompts?: Prompt[];
+  hasUpvoted?: boolean;
 };
 
 export interface ContributorSummary {

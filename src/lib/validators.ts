@@ -36,7 +36,7 @@ export const feedQuerySchema = z.object({
   contributor: z.string().optional(), // comma-separated emails
   contentTypes: z.string().optional(), // comma-separated: ARTICLE,VIDEO
   search: z.string().optional(),
-  sort: z.enum(["newest", "oldest"]).default("newest"),
+  sort: z.enum(["newest", "oldest", "mostUpvoted"]).default("newest"),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(50).default(12),
 });

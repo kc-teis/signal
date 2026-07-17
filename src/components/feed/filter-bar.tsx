@@ -120,7 +120,7 @@ export function FilterBar({
           ))}
           {sort !== "newest" && (
             <Badge variant="secondary" className="gap-1 rounded-full pr-1.5">
-              {sort === "oldest" ? "Oldest first" : sort}
+              {sort === "oldest" ? "Oldest first" : sort === "mostUpvoted" ? "Most upvoted" : sort}
               <button
                 onClick={() => onSortChange("newest")}
                 aria-label="Reset sort order"

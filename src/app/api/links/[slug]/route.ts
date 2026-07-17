@@ -32,13 +32,14 @@ function mapLink(link: any, categories: Category[]) {
     contextNote: link.context_note,
     metadata: link.metadata,
     status: link.status,
+    upvoteCount: link.upvote_count ?? 0,
     createdAt: link.created_at,
     updatedAt: link.updated_at,
     categories,
   };
 }
 
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
 
@@ -73,10 +74,23 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       createdAt: p.created_at,
     }));
 
+    const deviceId = request.cookies.get("kh_device_id")?.value;
+    let hasUpvoted = false;
+    if (deviceId) {
+      const { data: existing } = await supabase
+        .from("upvotes")
+        .select("id")
+        .eq("link_id", link.id)
+        .eq("device_id", deviceId)
+        .maybeSingle();
+      hasUpvoted = !!existing;
+    }
+
     return NextResponse.json({
       ...mapLink(link, categories),
       prompts,
       promptCount: prompts.length,
+      hasUpvoted,
     });
   } catch (error) {
     console.error("GET /api/links/[slug] error:", error);

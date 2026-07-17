@@ -6,6 +6,7 @@ import { useLinkBySlug } from "@/hooks/use-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UpvoteButton } from "@/components/feed/upvote-button";
 import { YOUTUBE_REGEX, SPOTIFY_EPISODE_REGEX, APPLE_PODCAST_REGEX } from "@/lib/constants";
 import type { Prompt } from "@/types";
 
@@ -169,7 +170,15 @@ export default function LinkDetailPage({
       )}
 
       <div className="space-y-4">
-        <h1 className="font-serif text-2xl font-bold tracking-tight">{link.title}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="font-serif text-2xl font-bold tracking-tight">{link.title}</h1>
+          <UpvoteButton
+            slug={link.slug}
+            count={link.upvoteCount}
+            hasUpvoted={link.hasUpvoted ?? false}
+            className="shrink-0"
+          />
+        </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {link.categories.map((cat) => (
