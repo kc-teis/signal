@@ -22,6 +22,14 @@ export function ContributorCombobox({
 }: ContributorComboboxProps) {
   const [query, setQuery] = useState("");
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // Bring the whole listbox into view when the search field gains focus —
+  // it sits at the bottom of a scrollable modal, so without this the input
+  // can be focused while the options below it stay scrolled out of sight.
+  function handleInputFocus() {
+    listRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -74,10 +82,12 @@ export function ContributorCombobox({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleInputKeyDown}
+        onFocus={handleInputFocus}
         placeholder="Search contributors..."
         className="h-9"
       />
       <ul
+        ref={listRef}
         role="listbox"
         aria-multiselectable="true"
         aria-label="Contributors"
