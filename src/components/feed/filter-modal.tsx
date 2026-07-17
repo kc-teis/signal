@@ -192,6 +192,22 @@ export function FilterModal({
             Categories
           </label>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Categories">
+            <Badge
+              variant={selectedCategories.length === 0 ? "default" : "outline"}
+              className="cursor-pointer select-none rounded-full px-3 py-1"
+              role="checkbox"
+              aria-checked={selectedCategories.length === 0}
+              tabIndex={0}
+              onClick={() => onCategoriesChange([])}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onCategoriesChange([]);
+                }
+              }}
+            >
+              All
+            </Badge>
             {categories.map((cat) => (
               <Badge
                 key={cat.slug}
