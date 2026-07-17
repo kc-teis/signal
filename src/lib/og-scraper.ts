@@ -34,9 +34,19 @@ function stripChrome(html: string): string {
 
 // Narrow the search space to the actual article body when the page marks one,
 // so we don't pick up nav/sidebar/related-post images that precede it in document order.
+// Many templates render "related posts" / "you may also like" teasers as their own
+// <article> elements ahead of the real content, so picking the FIRST <article> match
+// can land on a teaser instead of the post body. The real article is virtually always
+// far longer than a teaser card, so pick the longest <article> match instead.
 function extractMainContent(html: string): string {
-  const articleMatch = html.match(/<article[^>]*>[\s\S]*?<\/article>/i);
-  if (articleMatch) return articleMatch[0];
+  const articleMatches = Array.from(html.matchAll(/<article[^>]*>[\s\S]*?<\/article>/gi));
+  if (articleMatches.length > 0) {
+    let longest = articleMatches[0][0];
+    for (const m of articleMatches) {
+      if (m[0].length > longest.length) longest = m[0];
+    }
+    return longest;
+  }
   const mainMatch = html.match(/<main[^>]*>[\s\S]*?<\/main>/i);
   if (mainMatch) return mainMatch[0];
   return html;
@@ -100,7 +110,15 @@ function bestFromSrcset(srcset: string): string | null {
   return candidates[0].url;
 }
 
-function extractImageSrc(imgTag: string): string | null {
+interface ResolvedImageSrc {
+  src: string;
+  // True when src came from a lazy-load attribute rather than the tag's plain
+  // `src` — in that case, width/height on the tag describe the placeholder
+  // (often 1x1), not the resolved image, and must not be used to judge its size.
+  isLazyLoaded: boolean;
+}
+
+function extractImageSrc(imgTag: string): ResolvedImageSrc | null {
   // Many sites lazy-load: the real image lives in data-src/data-lazy-src/
   // data-original/srcset, while src holds a 1x1 placeholder gif. Prefer those.
   const attr = (name: string) => imgTag.match(new RegExp(`${name}=["']([^"']+)["']`, "i"))?.[1] ?? null;
@@ -108,11 +126,21 @@ function extractImageSrc(imgTag: string): string | null {
   const srcset = attr("data-srcset") ?? attr("srcset");
   if (srcset) {
     const best = bestFromSrcset(srcset);
-    if (best) return best;
+    if (best) return { src: best, isLazyLoaded: true };
   }
 
-  return attr("data-src") ?? attr("data-lazy-src") ?? attr("data-original") ?? attr("src");
+  const lazySrc = attr("data-src") ?? attr("data-lazy-src") ?? attr("data-original");
+  if (lazySrc) return { src: lazySrc, isLazyLoaded: true };
+
+  const plainSrc = attr("src");
+  return plainSrc ? { src: plainSrc, isLazyLoaded: false } : null;
 }
+
+// Cap on candidates returned — real usable article art is almost always among
+// the first few images in document order, and each candidate costs a real
+// fetch+upload attempt downstream, so an unbounded list risks serializing
+// dozens of network round trips on image-heavy pages.
+const MAX_ARTICLE_IMAGE_CANDIDATES = 6;
 
 // Returns candidate article illustration URLs in document order, restricted to
 // the article/main body (so nav logos, header banners, and author avatars —
@@ -125,24 +153,31 @@ function extractArticleImages(html: string, baseUrl: string): string[] {
   const seen = new Set<string>();
   let match;
 
-  while ((match = imgTagRegex.exec(scope)) !== null) {
+  while ((match = imgTagRegex.exec(scope)) !== null && results.length < MAX_ARTICLE_IMAGE_CANDIDATES) {
     const imgTag = match[0];
-    const src = extractImageSrc(imgTag);
-    if (!src || skipPatterns.test(src)) continue;
+    const resolved = extractImageSrc(imgTag);
+    if (!resolved) continue;
+    const { src, isLazyLoaded } = resolved;
+    if (skipPatterns.test(src)) continue;
     if (src.startsWith("data:")) continue;
     if (src.endsWith(".svg")) continue;
     if (src.length < 10) continue;
 
-    // Skip images explicitly sized as tiny (spacer/tracking pixels with real dimensions)
-    const width = parseInt(imgTag.match(/\bwidth=["']?(\d+)/i)?.[1] ?? "", 10);
-    const height = parseInt(imgTag.match(/\bheight=["']?(\d+)/i)?.[1] ?? "", 10);
-    if ((width && width < 100) || (height && height < 100)) continue;
+    // Skip images explicitly sized as tiny (spacer/tracking pixels with real
+    // dimensions) — but only when src came straight from the tag's own `src`.
+    // For lazy-loaded images, width/height on the tag describe the placeholder
+    // (often 1x1), not the real image resolved from data-src/srcset.
+    if (!isLazyLoaded) {
+      const width = parseInt(imgTag.match(/\bwidth=["']?(\d+)/i)?.[1] ?? "", 10);
+      const height = parseInt(imgTag.match(/\bheight=["']?(\d+)/i)?.[1] ?? "", 10);
+      if ((width && width < 100) || (height && height < 100)) continue;
+    }
 
     try {
-      const resolved = new URL(src, baseUrl).href;
-      if (!seen.has(resolved)) {
-        seen.add(resolved);
-        results.push(resolved);
+      const resolvedUrl = new URL(src, baseUrl).href;
+      if (!seen.has(resolvedUrl)) {
+        seen.add(resolvedUrl);
+        results.push(resolvedUrl);
       }
     } catch {
       continue;

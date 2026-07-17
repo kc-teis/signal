@@ -66,14 +66,14 @@ export default function FeedPage() {
     [contributors]
   );
 
-  function updateFilter<K extends keyof LinkFilters>(
+  const updateFilter = useCallback(<K extends keyof LinkFilters>(
     key: K,
     value: LinkFilters[K]
-  ) {
+  ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-  }
+  }, []);
 
-  function clearFilters() {
+  const clearFilters = useCallback(() => {
     setFilters({
       categories: [],
       contributors: [],
@@ -81,7 +81,15 @@ export default function FeedPage() {
       search: "",
       sort: "newest",
     });
-  }
+  }, []);
+
+  // Stable handlers — FilterBar/FilterModal thread these into effects (focus
+  // trap, keyboard listeners) that must not re-run on every FeedPage render.
+  const handleSearchChange = useCallback((v: string) => updateFilter("search", v), [updateFilter]);
+  const handleCategoriesChange = useCallback((v: string[]) => updateFilter("categories", v), [updateFilter]);
+  const handleContentTypesChange = useCallback((v: string[]) => updateFilter("contentTypes", v), [updateFilter]);
+  const handleContributorsChange = useCallback((v: string[]) => updateFilter("contributors", v), [updateFilter]);
+  const handleSortChange = useCallback((v: string) => updateFilter("sort", v), [updateFilter]);
 
   const allLinks = data?.pages.flatMap((page) => page.links) ?? [];
   const totalCount = data?.pages[0]?.total ?? undefined;
@@ -94,7 +102,7 @@ export default function FeedPage() {
     <div className="space-y-6">
       <SearchBar
         value={filters.search ?? ""}
-        onChange={(v) => updateFilter("search", v)}
+        onChange={handleSearchChange}
         resultCount={filters.search ? totalCount : undefined}
         isLoading={isLoading}
       />
@@ -107,10 +115,10 @@ export default function FeedPage() {
           selectedContentTypes={filters.contentTypes ?? []}
           selectedContributors={filters.contributors ?? []}
           sort={filters.sort ?? "newest"}
-          onCategoriesChange={(v) => updateFilter("categories", v)}
-          onContentTypesChange={(v) => updateFilter("contentTypes", v)}
-          onContributorsChange={(v) => updateFilter("contributors", v)}
-          onSortChange={(v) => updateFilter("sort", v)}
+          onCategoriesChange={handleCategoriesChange}
+          onContentTypesChange={handleContentTypesChange}
+          onContributorsChange={handleContributorsChange}
+          onSortChange={handleSortChange}
           onClear={clearFilters}
         />
 

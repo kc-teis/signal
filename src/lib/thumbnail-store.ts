@@ -22,7 +22,8 @@ export async function uploadThumbnailBuffer(
 }
 
 export async function uploadThumbnail(
-  imageUrl: string
+  imageUrl: string,
+  minBytes = 0
 ): Promise<{ url: string | null; byteSize: number }> {
   try {
     const res = await fetch(imageUrl, {
@@ -40,6 +41,10 @@ export async function uploadThumbnail(
 
     const buffer = await res.arrayBuffer();
     if (buffer.byteLength === 0) return { url: null, byteSize: 0 };
+
+    // Reject before uploading — otherwise every candidate that fails the size
+    // bar still leaves a permanent, unreferenced file in storage.
+    if (buffer.byteLength < minBytes) return { url: null, byteSize: buffer.byteLength };
 
     const filename = `${nanoid()}.${ext}`;
 

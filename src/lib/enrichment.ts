@@ -139,8 +139,8 @@ export async function enrichLink(url: string): Promise<EnrichmentResult> {
   );
 
   for (const candidate of imageCandidates) {
-    const { url, byteSize } = await uploadThumbnail(candidate);
-    if (url && byteSize >= MIN_THUMBNAIL_BYTES) {
+    const { url } = await uploadThumbnail(candidate, MIN_THUMBNAIL_BYTES);
+    if (url) {
       thumbnailUrl = url;
       break;
     }

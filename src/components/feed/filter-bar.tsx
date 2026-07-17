@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, X } from "lucide-react";
@@ -41,6 +41,8 @@ export function FilterBar({
   onClear,
 }: FilterBarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const handleOpen = useCallback(() => setIsOpen(true), []);
+  const handleClose = useCallback(() => setIsOpen(false), []);
 
   const categoryBySlug = new Map(categories.map((c) => [c.slug, c.name]));
   const contributorByEmail = new Map(contributors.map((c) => [c.email, c.name]));
@@ -59,7 +61,7 @@ export function FilterBar({
         <Button
           type="button"
           variant="outline"
-          onClick={() => setIsOpen(true)}
+          onClick={handleOpen}
           className="gap-2"
         >
           <SlidersHorizontal className="size-4" />
@@ -146,7 +148,7 @@ export function FilterBar({
           onContributorsChange={onContributorsChange}
           onSortChange={onSortChange}
           onClear={onClear}
-          onClose={() => setIsOpen(false)}
+          onClose={handleClose}
         />
       )}
     </div>

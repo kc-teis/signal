@@ -81,6 +81,11 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
   }
 
   async function handleRegenerate() {
+    if (!title.trim() || !summary.trim() || categorySlugs.length === 0 || contentTypes.length === 0) {
+      toast.error("Title, summary, at least one category, and one content type are required");
+      return;
+    }
+
     setRegenerating(true);
     try {
       const res = await fetch(`/api/links/${link.slug}`, {
@@ -282,10 +287,10 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button variant="outline" onClick={onCancel} disabled={saving}>
+          <Button variant="outline" onClick={onCancel} disabled={saving || regenerating}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || regenerating}>
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
