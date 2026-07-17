@@ -24,17 +24,19 @@ export function ContributorCombobox({
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // Bring the whole listbox into view when the search field gains focus —
-  // it sits at the bottom of a scrollable modal, so without this the input
-  // can be focused while the options below it stay scrolled out of sight.
-  // Deferred two frames because the browser's own focus-into-view scrolling
-  // (which only guarantees the input itself is visible) can otherwise run
-  // after ours and undo it; block:"end" reliably reveals the full list
-  // rather than a "nearest" no-op if it's judged already close enough.
+  // Bring the listbox into view when the search field gains focus — it sits
+  // at the bottom of a scrollable modal, so without this the input can be
+  // focused while the options below it stay scrolled out of sight. Deferred
+  // two frames because the browser's own focus-into-view scrolling (which
+  // only guarantees the input itself is visible) can otherwise run after
+  // ours and undo it. block:"start" aligns the TOP of the list with the top
+  // of the visible area, so as many rows as fit below are shown, rather than
+  // block:"end" which only guarantees the bottom edge and can leave most of
+  // the list above the fold.
   function handleInputFocus() {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        listRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+        listRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
       });
     });
   }
@@ -99,7 +101,7 @@ export function ContributorCombobox({
         role="listbox"
         aria-multiselectable="true"
         aria-label="Contributors"
-        className="max-h-44 space-y-0.5 overflow-y-auto rounded-md border p-1"
+        className="max-h-72 space-y-0.5 overflow-y-auto rounded-md border p-1"
       >
         <li>
           <button
