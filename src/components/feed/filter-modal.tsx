@@ -119,6 +119,22 @@ export function FilterModal({
             Content type
           </label>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Content types">
+            <Badge
+              variant={selectedContentTypes.length === 0 ? "default" : "outline"}
+              className="cursor-pointer select-none rounded-full px-3 py-1"
+              role="checkbox"
+              aria-checked={selectedContentTypes.length === 0}
+              tabIndex={0}
+              onClick={() => onContentTypesChange([])}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onContentTypesChange([]);
+                }
+              }}
+            >
+              All
+            </Badge>
             {CONTENT_TYPES.map((ct) => (
               <Badge
                 key={ct.value}
