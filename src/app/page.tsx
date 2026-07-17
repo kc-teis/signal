@@ -91,7 +91,7 @@ export default function FeedPage() {
         isLoading={isLoading}
       />
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3">
         <FilterBar
           categories={[...CATEGORIES]}
           contributors={contributors.map((c) => ({
