@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLinks, type LinkFilters } from "@/hooks/use-links";
 import { FilterBar } from "@/components/feed/filter-bar";
@@ -58,6 +58,14 @@ export default function FeedPage() {
     refetchIntervalInBackground: true,
   });
 
+  const sortedContributors = useMemo(
+    () =>
+      contributors
+        .map((c) => ({ name: c.name, email: c.email }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [contributors]
+  );
+
   function updateFilter<K extends keyof LinkFilters>(
     key: K,
     value: LinkFilters[K]
@@ -94,10 +102,7 @@ export default function FeedPage() {
       <div className="flex items-start justify-between gap-3">
         <FilterBar
           categories={[...CATEGORIES]}
-          contributors={contributors.map((c) => ({
-            name: c.name,
-            email: c.email,
-          }))}
+          contributors={sortedContributors}
           selectedCategories={filters.categories ?? []}
           selectedContentTypes={filters.contentTypes ?? []}
           selectedContributors={filters.contributors ?? []}
