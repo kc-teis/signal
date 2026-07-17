@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { nanoid } from "nanoid";
+import { notifyTeamsNewSubmission } from "@/lib/teams-notify";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (linkError) throw linkError;
+
+    await notifyTeamsNewSubmission({
+      slug,
+      title: title.trim(),
+      summary,
+      categorySlugs,
+      contentTypes: ["PROMPT_FOLDER"],
+      contributorName: contributorName.trim(),
+      thumbnailUrl: null,
+      url: null,
+    });
 
     return NextResponse.json({ slug, promptCount: prompts.length });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { publishLinkSchema } from "@/lib/validators";
+import { notifyTeamsNewSubmission } from "@/lib/teams-notify";
 import type { Category } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -124,6 +125,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       regenerateEnrichment,
     } = parsed.data;
 
+    const { data: existingLink } = await supabase
+      .from("links")
+      .select("url, status")
+      .eq("slug", slug)
+      .single();
+    const wasDraft = existingLink?.status === "DRAFT";
+
     let updateData: any = {
       title,
       summary,
@@ -136,12 +144,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     // If regenerateEnrichment is true, re-run enrichment on the original URL
     if (regenerateEnrichment) {
-      const { data: existingLink } = await supabase
-        .from("links")
-        .select("url")
-        .eq("slug", slug)
-        .single();
-
       if (existingLink?.url) {
         const { enrichLink } = await import("@/lib/enrichment");
         const enrichment = await enrichLink(existingLink.url);
@@ -173,6 +175,26 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const categories = await resolveCategories(link.category_slugs);
+
+    // Only notify on the DRAFT->PUBLISHED transition (a brand-new submission
+    // going live) — this same PATCH endpoint is also used to edit already-
+    // published links (edit-link-dialog.tsx), which must not re-notify.
+    if (wasDraft && link.status === "PUBLISHED") {
+      // Awaited (not fire-and-forget) — serverless functions can be frozen
+      // before a detached promise finishes once the response is sent, and
+      // notifyTeamsNewSubmission already swallows its own errors internally,
+      // so awaiting it can't turn a Teams outage into a failed publish.
+      await notifyTeamsNewSubmission({
+        slug: link.slug,
+        title: link.title,
+        summary: link.summary,
+        categorySlugs: link.category_slugs ?? [],
+        contentTypes: link.content_types ?? [],
+        contributorName: link.contributor_name,
+        thumbnailUrl: link.thumbnail_url,
+        url: link.url,
+      });
+    }
 
     return NextResponse.json(mapLink(link, categories));
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { submitPromptSchema } from "@/lib/validators";
 import { generateSlug } from "@/lib/slug";
+import { notifyTeamsNewSubmission } from "@/lib/teams-notify";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,17 @@ export async function POST(request: NextRequest) {
     if (promptError) {
       console.error("Prompt insert error:", promptError);
     }
+
+    await notifyTeamsNewSubmission({
+      slug: link.slug,
+      title: link.title,
+      summary: link.summary,
+      categorySlugs: link.category_slugs ?? [],
+      contentTypes: link.content_types ?? [],
+      contributorName: link.contributor_name,
+      thumbnailUrl: link.thumbnail_url,
+      url: link.url,
+    });
 
     return NextResponse.json({
       id: link.id,
