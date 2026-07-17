@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { publishLinkSchema } from "@/lib/validators";
-import { notifyTeamsNewSubmission } from "@/lib/teams-notify";
+import { notifyTeamsNewSubmission, notifyTeamsRemovedSubmission } from "@/lib/teams-notify";
 import type { Category } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -210,6 +210,15 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
 
+    // Fetch first so we know whether it was ever announced (only PUBLISHED
+    // items get a "new submission" card, so only those need a removed notice)
+    // and can still reference its title after the row is gone.
+    const { data: existingLink } = await supabase
+      .from("links")
+      .select("title, status")
+      .eq("slug", slug)
+      .single();
+
     const { error } = await supabase.from("links").delete().eq("slug", slug);
 
     if (error) {
@@ -218,6 +227,10 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
         { error: "Failed to delete link" },
         { status: 500 }
       );
+    }
+
+    if (existingLink?.status === "PUBLISHED") {
+      await notifyTeamsRemovedSubmission({ title: existingLink.title });
     }
 
     return NextResponse.json({ success: true });

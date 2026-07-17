@@ -12,6 +12,10 @@ export interface NewSubmissionNotification {
   url: string | null;
 }
 
+export interface RemovedSubmissionNotification {
+  title: string | null;
+}
+
 function categoryNames(slugs: string[]): string {
   return slugs
     .map((s) => CATEGORIES.find((c) => c.slug === s)?.name)
@@ -88,9 +92,39 @@ function buildNewSubmissionCard(link: NewSubmissionNotification) {
   };
 }
 
-// Fire-and-forget: a Teams outage or misconfigured webhook must never break
-// a submission, so failures are logged and swallowed rather than thrown.
-export async function notifyTeamsNewSubmission(link: NewSubmissionNotification): Promise<void> {
+function buildRemovedNotice(link: RemovedSubmissionNotification) {
+  return {
+    type: "message",
+    attachments: [
+      {
+        contentType: "application/vnd.microsoft.card.adaptive",
+        content: {
+          $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+          type: "AdaptiveCard",
+          version: "1.4",
+          body: [
+            {
+              type: "TextBlock",
+              text: `🗑️ *${link.title ?? "Untitled"}* was removed from Signal`,
+              wrap: true,
+              isSubtle: true,
+            },
+          ],
+        },
+      },
+    ],
+  };
+}
+
+// A webhook/Workflow trigger doesn't return an addressable message ID, so
+// there's no way to delete or edit the original "new submission" card later
+// — posting a separate notice is the only option available without moving
+// to the Graph API (app registration + admin-consented permissions).
+
+// Fire-and-forget in spirit: a Teams outage or misconfigured webhook must
+// never break the caller's own operation, so failures are logged and
+// swallowed rather than thrown.
+async function postToTeams(payload: unknown): Promise<void> {
   const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
   if (!webhookUrl) return;
 
@@ -98,7 +132,7 @@ export async function notifyTeamsNewSubmission(link: NewSubmissionNotification):
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildNewSubmissionCard(link)),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       console.error("Teams notification failed:", res.status, await res.text());
@@ -106,4 +140,12 @@ export async function notifyTeamsNewSubmission(link: NewSubmissionNotification):
   } catch (error) {
     console.error("Teams notification error:", error);
   }
+}
+
+export function notifyTeamsNewSubmission(link: NewSubmissionNotification): Promise<void> {
+  return postToTeams(buildNewSubmissionCard(link));
+}
+
+export function notifyTeamsRemovedSubmission(link: RemovedSubmissionNotification): Promise<void> {
+  return postToTeams(buildRemovedNotice(link));
 }
