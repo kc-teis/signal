@@ -5,6 +5,7 @@ export interface OGResult {
   description: string;
   image: string | null;
   articleImage: string | null;
+  articleImages: string[];
   articleText: string | null;
   siteName: string | null;
   isYouTube: boolean;
@@ -19,15 +20,30 @@ export interface OGResult {
   } | null;
 }
 
-function extractArticleText(html: string): string | null {
-  // Strip script, style, nav, header, footer tags and their content
-  let text = html
+function stripChrome(html: string): string {
+  // Strip script, style, nav, header, footer, aside tags and their content —
+  // these commonly contain logos/avatars/icons that aren't the article's own imagery
+  return html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
     .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, "")
     .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "")
     .replace(/<aside[^>]*>[\s\S]*?<\/aside>/gi, "");
+}
+
+// Narrow the search space to the actual article body when the page marks one,
+// so we don't pick up nav/sidebar/related-post images that precede it in document order.
+function extractMainContent(html: string): string {
+  const articleMatch = html.match(/<article[^>]*>[\s\S]*?<\/article>/i);
+  if (articleMatch) return articleMatch[0];
+  const mainMatch = html.match(/<main[^>]*>[\s\S]*?<\/main>/i);
+  if (mainMatch) return mainMatch[0];
+  return html;
+}
+
+function extractArticleText(html: string): string | null {
+  let text = stripChrome(html);
 
   // Replace block elements with newlines, then strip all tags
   text = text
@@ -68,32 +84,72 @@ function extractArticleText(html: string): string | null {
   return bestBlock.length > 50 ? bestBlock.slice(0, 3000) : null;
 }
 
-function extractArticleImage(html: string, baseUrl: string): string | null {
-  // Match <img> tags with src attributes, skip tiny icons/trackers
-  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
-  const skipPatterns = /favicon|icon|pixel|tracking|badge|avatar|emoji|1x1|spacer|logo/i;
+// Picks the highest-resolution URL out of a srcset list, e.g.
+// "small.jpg 400w, medium.jpg 800w, large.jpg 1600w" -> large.jpg
+function bestFromSrcset(srcset: string): string | null {
+  const candidates = srcset
+    .split(",")
+    .map((entry) => entry.trim().split(/\s+/))
+    .filter((parts) => parts[0])
+    .map(([url, descriptor]) => ({
+      url,
+      width: descriptor ? parseInt(descriptor, 10) || 0 : 0,
+    }));
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => b.width - a.width);
+  return candidates[0].url;
+}
+
+function extractImageSrc(imgTag: string): string | null {
+  // Many sites lazy-load: the real image lives in data-src/data-lazy-src/
+  // data-original/srcset, while src holds a 1x1 placeholder gif. Prefer those.
+  const attr = (name: string) => imgTag.match(new RegExp(`${name}=["']([^"']+)["']`, "i"))?.[1] ?? null;
+
+  const srcset = attr("data-srcset") ?? attr("srcset");
+  if (srcset) {
+    const best = bestFromSrcset(srcset);
+    if (best) return best;
+  }
+
+  return attr("data-src") ?? attr("data-lazy-src") ?? attr("data-original") ?? attr("src");
+}
+
+// Returns candidate article illustration URLs in document order, restricted to
+// the article/main body (so nav logos, header banners, and author avatars —
+// which appear earlier in the raw page HTML — never take priority).
+function extractArticleImages(html: string, baseUrl: string): string[] {
+  const scope = stripChrome(extractMainContent(html));
+  const skipPatterns = /favicon|icon|pixel|tracking|badge|avatar|emoji|1x1|spacer|logo|gravatar/i;
+  const imgTagRegex = /<img\b[^>]*>/gi;
+  const results: string[] = [];
+  const seen = new Set<string>();
   let match;
 
-  while ((match = imgRegex.exec(html)) !== null) {
-    const src = match[1];
+  while ((match = imgTagRegex.exec(scope)) !== null) {
+    const imgTag = match[0];
+    const src = extractImageSrc(imgTag);
     if (!src || skipPatterns.test(src)) continue;
-    // Skip data URIs
     if (src.startsWith("data:")) continue;
-    // Skip SVGs (usually icons/logos)
     if (src.endsWith(".svg")) continue;
-    // Skip very short paths (likely icons)
     if (src.length < 10) continue;
 
-    // Resolve relative URLs
+    // Skip images explicitly sized as tiny (spacer/tracking pixels with real dimensions)
+    const width = parseInt(imgTag.match(/\bwidth=["']?(\d+)/i)?.[1] ?? "", 10);
+    const height = parseInt(imgTag.match(/\bheight=["']?(\d+)/i)?.[1] ?? "", 10);
+    if ((width && width < 100) || (height && height < 100)) continue;
+
     try {
       const resolved = new URL(src, baseUrl).href;
-      return resolved;
+      if (!seen.has(resolved)) {
+        seen.add(resolved);
+        results.push(resolved);
+      }
     } catch {
       continue;
     }
   }
 
-  return null;
+  return results;
 }
 
 function detectPodcast(url: string, ogType?: string): boolean {
@@ -279,6 +335,7 @@ async function scrapeYouTube(url: string, youtubeId: string): Promise<OGResult> 
     description,
     image: thumbnail,
     articleImage: null,
+    articleImages: [],
     articleText: description || null,
     siteName: "YouTube",
     isYouTube: true,
@@ -346,8 +403,8 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
       | undefined;
     const twitterImg = twitterImage?.[0]?.url ?? null;
 
-    // Extract first substantial image from article body HTML
-    const articleImage = extractArticleImage(pageHtml, url);
+    // Extract candidate illustrations from the article body HTML, in document order
+    const articleImages = extractArticleImages(pageHtml, url);
 
     // Extract readable text from article body
     const articleText = extractArticleText(pageHtml);
@@ -371,7 +428,8 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
       title: result.ogTitle || result.dcTitle || "Untitled",
       description: result.ogDescription || result.dcDescription || "",
       image: ogOrTwitter,
-      articleImage: ogOrTwitter ? null : articleImage,
+      articleImage: articleImages[0] ?? null,
+      articleImages,
       articleText,
       siteName: result.ogSiteName || null,
       isYouTube: false,
@@ -389,6 +447,7 @@ export async function scrapeOpenGraph(url: string): Promise<OGResult> {
       description: "",
       image: null,
       articleImage: null,
+      articleImages: [],
       articleText: null,
       siteName: null,
       isYouTube: false,

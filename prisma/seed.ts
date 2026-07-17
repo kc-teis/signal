@@ -10,6 +10,7 @@ const categories = [
   { name: "Process", slug: "process" },
   { name: "AI Trends", slug: "ai-trends" },
   { name: "Software Development Life Cycle", slug: "sdlc" },
+  { name: "athena Use Case", slug: "athena-use-case" },
 ];
 
 async function main() {

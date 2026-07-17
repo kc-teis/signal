@@ -6,6 +6,7 @@ export const CATEGORIES = [
   { name: "Process", slug: "process" },
   { name: "AI Trends", slug: "ai-trends" },
   { name: "SDLC", slug: "sdlc" },
+  { name: "athena Use Case", slug: "athena-use-case" },
 ] as const;
 
 export const CATEGORY_NAMES = CATEGORIES.map((c) => c.name);

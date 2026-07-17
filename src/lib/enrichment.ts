@@ -130,15 +130,19 @@ export async function enrichLink(url: string): Promise<EnrichmentResult> {
   }
 
   // Upload thumbnail to Supabase Storage for persistence
-  // Fallback chain: OG image (if ≥ 15KB) → generated branded card
+  // Fallback chain: OG image, then each candidate article illustration in document
+  // order (first one ≥ 15KB wins), then generated branded card as last resort
   const MIN_THUMBNAIL_BYTES = 15 * 1024;
   let thumbnailUrl: string | null = null;
-  const imageSource = og.image || og.articleImage;
+  const imageCandidates = [og.image, ...og.articleImages].filter(
+    (src): src is string => !!src
+  );
 
-  if (imageSource) {
-    const { url, byteSize } = await uploadThumbnail(imageSource);
+  for (const candidate of imageCandidates) {
+    const { url, byteSize } = await uploadThumbnail(candidate);
     if (url && byteSize >= MIN_THUMBNAIL_BYTES) {
       thumbnailUrl = url;
+      break;
     }
   }
 
