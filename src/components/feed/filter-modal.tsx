@@ -196,27 +196,51 @@ export function FilterModal({
           <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Sort
           </label>
-          <div className="space-y-2" role="radiogroup" aria-label="Sort order">
+          <div
+            className="space-y-2"
+            role="radiogroup"
+            aria-label="Sort order"
+            onKeyDown={(e) => {
+              if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+              e.preventDefault();
+              const currentIndex = SORT_OPTIONS.findIndex((opt) => opt.value === sort);
+              const delta = e.key === "ArrowDown" ? 1 : -1;
+              const nextIndex = (currentIndex + delta + SORT_OPTIONS.length) % SORT_OPTIONS.length;
+              const next = SORT_OPTIONS[nextIndex];
+              onSortChange(next.value);
+              (e.currentTarget.children[nextIndex] as HTMLElement | undefined)?.focus();
+            }}
+          >
             {SORT_OPTIONS.map((opt) => (
-              <label
+              <div
                 key={opt.value}
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 ${
+                role="radio"
+                aria-checked={sort === opt.value}
+                tabIndex={sort === opt.value ? 0 : -1}
+                onClick={() => onSortChange(opt.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSortChange(opt.value);
+                  }
+                }}
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                   sort === opt.value ? "border-primary bg-primary/5" : "hover:bg-accent"
                 }`}
               >
-                <input
-                  type="radio"
-                  name="sort"
-                  value={opt.value}
-                  checked={sort === opt.value}
-                  onChange={() => onSortChange(opt.value)}
-                  className="mt-0.5 accent-primary focus-visible:outline-none"
-                />
+                <div
+                  aria-hidden="true"
+                  className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${
+                    sort === opt.value ? "border-primary" : "border-input"
+                  }`}
+                >
+                  {sort === opt.value && <div className="size-2 rounded-full bg-primary" />}
+                </div>
                 <span>
                   <span className="block text-sm font-semibold">{opt.label}</span>
                   <span className="block text-xs text-muted-foreground">{opt.description}</span>
                 </span>
-              </label>
+              </div>
             ))}
           </div>
         </div>
