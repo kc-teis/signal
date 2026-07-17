@@ -16,7 +16,7 @@ export default function FeedPage() {
   const expandedInitialized = useRef(false);
   const [filters, setFilters] = useState<LinkFilters>({
     categories: [],
-    contributor: "",
+    contributors: [],
     contentTypes: [],
     search: "",
     sort: "newest",
@@ -68,7 +68,7 @@ export default function FeedPage() {
   function clearFilters() {
     setFilters({
       categories: [],
-      contributor: "",
+      contributors: [],
       contentTypes: [],
       search: "",
       sort: "newest",
@@ -100,11 +100,11 @@ export default function FeedPage() {
           }))}
           selectedCategories={filters.categories ?? []}
           selectedContentTypes={filters.contentTypes ?? []}
-          contributor={filters.contributor ?? ""}
+          selectedContributors={filters.contributors ?? []}
           sort={filters.sort ?? "newest"}
           onCategoriesChange={(v) => updateFilter("categories", v)}
           onContentTypesChange={(v) => updateFilter("contentTypes", v)}
-          onContributorChange={(v) => updateFilter("contributor", v)}
+          onContributorsChange={(v) => updateFilter("contributors", v)}
           onSortChange={(v) => updateFilter("sort", v)}
           onClear={clearFilters}
         />

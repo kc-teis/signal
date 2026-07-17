@@ -142,7 +142,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (contributor) {
-      query = query.eq("contributor_email", contributor);
+      const emails = contributor.split(",").map((e) => e.trim());
+      query = query.in("contributor_email", emails);
     }
 
     if (search) {

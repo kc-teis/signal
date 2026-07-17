@@ -34,7 +34,7 @@ export default function MySubmissionsPage() {
   }, [router]);
 
   const { data, isLoading } = useLinks(
-    email ? { contributor: email } : { contributor: "" }
+    email ? { contributors: [email] } : { contributors: [] }
   );
 
   function invalidateLinks() {

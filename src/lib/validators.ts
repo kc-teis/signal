@@ -33,7 +33,7 @@ export const publishLinkSchema = z.object({
 
 export const feedQuerySchema = z.object({
   categories: z.string().optional(), // comma-separated slugs
-  contributor: z.string().optional(),
+  contributor: z.string().optional(), // comma-separated emails
   contentTypes: z.string().optional(), // comma-separated: ARTICLE,VIDEO
   search: z.string().optional(),
   sort: z.enum(["newest", "oldest"]).default("newest"),

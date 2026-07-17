@@ -1,16 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArticleIcon, VideoIcon, PodcastIcon, PromptIcon } from "@/components/icons/content-type-icons";
+import { ContributorCombobox } from "@/components/feed/contributor-combobox";
 import { X } from "lucide-react";
 
 interface FilterModalProps {
@@ -18,11 +12,11 @@ interface FilterModalProps {
   contributors: { name: string; email: string }[];
   selectedCategories: string[];
   selectedContentTypes: string[];
-  contributor: string;
+  selectedContributors: string[];
   sort: string;
   onCategoriesChange: (slugs: string[]) => void;
   onContentTypesChange: (types: string[]) => void;
-  onContributorChange: (value: string) => void;
+  onContributorsChange: (emails: string[]) => void;
   onSortChange: (value: string) => void;
   onClear: () => void;
   onClose: () => void;
@@ -45,11 +39,11 @@ export function FilterModal({
   contributors,
   selectedCategories,
   selectedContentTypes,
-  contributor,
+  selectedContributors,
   sort,
   onCategoriesChange,
   onContentTypesChange,
-  onContributorChange,
+  onContributorsChange,
   onSortChange,
   onClear,
   onClose,
@@ -93,7 +87,7 @@ export function FilterModal({
   const hasFilters =
     selectedCategories.length > 0 ||
     selectedContentTypes.length > 0 ||
-    !!contributor ||
+    selectedContributors.length > 0 ||
     sort !== "newest";
 
   return (
@@ -208,22 +202,11 @@ export function FilterModal({
           <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Contributor
           </label>
-          <Select
-            value={contributor || "__all__"}
-            onValueChange={(val) => onContributorChange(val === "__all__" ? "" : val)}
-          >
-            <SelectTrigger className="w-full" aria-label="Filter by contributor">
-              <SelectValue placeholder="All Contributors" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All Contributors</SelectItem>
-              {contributors.map((c) => (
-                <SelectItem key={c.email} value={c.email}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ContributorCombobox
+            contributors={contributors}
+            selected={selectedContributors}
+            onChange={onContributorsChange}
+          />
         </div>
 
         <div className="flex items-center justify-between border-t pt-4">

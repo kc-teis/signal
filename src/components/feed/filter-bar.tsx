@@ -11,11 +11,11 @@ interface FilterBarProps {
   contributors: { name: string; email: string }[];
   selectedCategories: string[];
   selectedContentTypes: string[];
-  contributor: string;
+  selectedContributors: string[];
   sort: string;
   onCategoriesChange: (slugs: string[]) => void;
   onContentTypesChange: (types: string[]) => void;
-  onContributorChange: (value: string) => void;
+  onContributorsChange: (emails: string[]) => void;
   onSortChange: (value: string) => void;
   onClear: () => void;
 }
@@ -32,11 +32,11 @@ export function FilterBar({
   contributors,
   selectedCategories,
   selectedContentTypes,
-  contributor,
+  selectedContributors,
   sort,
   onCategoriesChange,
   onContentTypesChange,
-  onContributorChange,
+  onContributorsChange,
   onSortChange,
   onClear,
 }: FilterBarProps) {
@@ -48,7 +48,7 @@ export function FilterBar({
   const activeFilterCount =
     selectedCategories.length +
     selectedContentTypes.length +
-    (contributor ? 1 : 0) +
+    selectedContributors.length +
     (sort !== "newest" ? 1 : 0);
 
   const hasFilters = activeFilterCount > 0;
@@ -106,18 +106,18 @@ export function FilterBar({
               </button>
             </Badge>
           ))}
-          {contributor && (
-            <Badge variant="secondary" className="gap-1 rounded-full pr-1.5">
-              {contributorByEmail.get(contributor) ?? contributor}
+          {selectedContributors.map((email) => (
+            <Badge key={email} variant="secondary" className="gap-1 rounded-full pr-1.5">
+              {contributorByEmail.get(email) ?? email}
               <button
-                onClick={() => onContributorChange("")}
-                aria-label="Remove contributor filter"
+                onClick={() => onContributorsChange(selectedContributors.filter((e) => e !== email))}
+                aria-label={`Remove ${contributorByEmail.get(email) ?? email} filter`}
                 className="rounded-full p-0.5 hover:bg-background/50"
               >
                 <X className="size-3" />
               </button>
             </Badge>
-          )}
+          ))}
           {sort !== "newest" && (
             <Badge variant="secondary" className="gap-1 rounded-full pr-1.5">
               {sort === "oldest" ? "Oldest first" : sort}
@@ -139,11 +139,11 @@ export function FilterBar({
           contributors={contributors}
           selectedCategories={selectedCategories}
           selectedContentTypes={selectedContentTypes}
-          contributor={contributor}
+          selectedContributors={selectedContributors}
           sort={sort}
           onCategoriesChange={onCategoriesChange}
           onContentTypesChange={onContentTypesChange}
-          onContributorChange={onContributorChange}
+          onContributorsChange={onContributorsChange}
           onSortChange={onSortChange}
           onClear={onClear}
           onClose={() => setIsOpen(false)}

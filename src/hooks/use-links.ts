@@ -4,7 +4,7 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 
 export interface LinkFilters {
   categories?: string[];
-  contributor?: string;
+  contributors?: string[];
   contentTypes?: string[];
   search?: string;
   sort?: string;
@@ -17,7 +17,8 @@ async function fetchLinksPage(
   const params = new URLSearchParams();
   if (filters.categories && filters.categories.length > 0)
     params.set("categories", filters.categories.join(","));
-  if (filters.contributor) params.set("contributor", filters.contributor);
+  if (filters.contributors && filters.contributors.length > 0)
+    params.set("contributor", filters.contributors.join(","));
   if (filters.contentTypes && filters.contentTypes.length > 0)
     params.set("contentTypes", filters.contentTypes.join(","));
   if (filters.search) params.set("search", filters.search);
