@@ -30,6 +30,7 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
   const [thumbnailUrl, setThumbnailUrl] = useState(link.thumbnailUrl ?? null);
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
@@ -77,6 +78,39 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
     setContentTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
+  }
+
+  async function handleRegenerate() {
+    setRegenerating(true);
+    try {
+      const res = await fetch(`/api/links/${link.slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          summary,
+          categorySlugs,
+          contentTypes,
+          thumbnailUrl,
+          contextNote: contextNote || null,
+          regenerateEnrichment: true,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to regenerate");
+
+      const updated = await res.json();
+      setTitle(updated.title ?? "");
+      setSummary(updated.summary ?? "");
+      setThumbnailUrl(updated.thumbnailUrl ?? null);
+      setCategorySlugs(updated.categorySlugs ?? []);
+      setContentTypes(updated.contentTypes ?? []);
+      toast.success("Enrichment regenerated");
+    } catch {
+      toast.error("Failed to regenerate enrichment");
+    } finally {
+      setRegenerating(false);
+    }
   }
 
   async function handleSave() {
@@ -140,24 +174,35 @@ export function EditLinkDialog({ link, onSave, onCancel }: EditLinkDialogProps) 
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Thumbnail</label>
-          <div className="group relative h-24 w-40 overflow-hidden rounded-lg border bg-muted">
-            {isUploadingThumbnail ? (
-              <div className="flex h-full w-full items-center justify-center">
-                <Loader2 className="size-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : thumbnailUrl ? (
-              <>
-                <Image src={thumbnailUrl} alt="Thumbnail" fill className="object-cover" unoptimized />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                  <p className="px-2 text-center text-xs text-white">Paste to replace</p>
+          <div className="flex items-end gap-3">
+            <div className="group relative h-24 w-40 overflow-hidden rounded-lg border bg-muted">
+              {isUploadingThumbnail || regenerating ? (
+                <div className="flex h-full w-full items-center justify-center">
+                  <Loader2 className="size-6 animate-spin text-muted-foreground" />
                 </div>
-              </>
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
-                <ImageIcon className="size-6" />
-                <p className="px-2 text-center text-xs">⌘V to paste</p>
-              </div>
-            )}
+              ) : thumbnailUrl ? (
+                <>
+                  <Image src={thumbnailUrl} alt="Thumbnail" fill className="object-cover" unoptimized />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                    <p className="px-2 text-center text-xs text-white">Paste to replace</p>
+                  </div>
+                </>
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
+                  <ImageIcon className="size-6" />
+                  <p className="px-2 text-center text-xs">⌘V to paste</p>
+                </div>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerate}
+              disabled={regenerating || saving}
+            >
+              {regenerating ? "Regenerating..." : "Regenerate"}
+            </Button>
           </div>
         </div>
 
