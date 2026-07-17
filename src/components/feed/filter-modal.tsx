@@ -50,14 +50,20 @@ export function FilterModal({
 }: FilterModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
+  // Mount/unmount only — depending on onClose directly would re-run this
+  // (and re-steal focus via dialogRef.current.focus()) every time the parent
+  // re-renders with a new inline onClose function, which happens periodically
+  // due to background refetches and made it impossible to type in nested inputs.
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement;
     dialogRef.current?.focus();
     document.body.style.overflow = "hidden";
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     }
     document.addEventListener("keydown", handleKeyDown);
 
@@ -66,7 +72,8 @@ export function FilterModal({
       document.body.style.overflow = "";
       previousFocusRef.current?.focus();
     };
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function toggleCategory(slug: string) {
     if (selectedCategories.includes(slug)) {
@@ -101,9 +108,9 @@ export function FilterModal({
         aria-modal="true"
         aria-labelledby="filter-modal-title"
         tabIndex={-1}
-        className="w-full max-w-lg rounded-xl border bg-background p-6 shadow-lg space-y-6 max-h-[90vh] overflow-y-auto focus:outline-none"
+        className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-xl border bg-background shadow-lg focus:outline-none"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between p-6 pb-0">
           <h2 id="filter-modal-title" className="text-lg font-semibold">Filter &amp; sort</h2>
           <button
             onClick={onClose}
@@ -114,6 +121,7 @@ export function FilterModal({
           </button>
         </div>
 
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Content type
@@ -240,8 +248,9 @@ export function FilterModal({
             onChange={onContributorsChange}
           />
         </div>
+        </div>
 
-        <div className="flex items-center justify-between border-t pt-4">
+        <div className="flex shrink-0 items-center justify-between border-t p-6 pt-4">
           <button
             onClick={onClear}
             disabled={!hasFilters}
