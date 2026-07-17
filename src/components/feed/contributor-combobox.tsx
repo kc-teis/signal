@@ -21,6 +21,12 @@ export function ContributorCombobox({
   onChange,
 }: ContributorComboboxProps) {
   const [query, setQuery] = useState("");
+  // Roving tabindex: only one option is a Tab stop at a time (updated via
+  // focus, covering both click and arrow-key movement) so Tab moves past the
+  // whole listbox in one press instead of visiting every contributor —
+  // otherwise a long list turns "Tab out of the filter modal" into dozens
+  // of key presses.
+  const [activeIndex, setActiveIndex] = useState(0);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -49,6 +55,12 @@ export function ContributorCombobox({
 
   // "All Contributors" occupies index 0; real options follow.
   const optionCount = filtered.length + 1;
+  const clampedActiveIndex = Math.min(activeIndex, optionCount - 1);
+
+  function handleQueryChange(value: string) {
+    setQuery(value);
+    setActiveIndex(0);
+  }
 
   function toggle(email: string) {
     if (selected.includes(email)) {
@@ -90,7 +102,7 @@ export function ContributorCombobox({
     <div className="space-y-2">
       <Input
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => handleQueryChange(e.target.value)}
         onKeyDown={handleInputKeyDown}
         onFocus={handleInputFocus}
         placeholder="Search contributors..."
@@ -109,6 +121,8 @@ export function ContributorCombobox({
             type="button"
             role="option"
             aria-selected={selected.length === 0}
+            tabIndex={clampedActiveIndex === 0 ? 0 : -1}
+            onFocus={() => setActiveIndex(0)}
             onClick={() => onChange([])}
             onKeyDown={(e) => handleOptionKeyDown(e, 0)}
             className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -127,6 +141,8 @@ export function ContributorCombobox({
               type="button"
               role="option"
               aria-selected={selected.includes(c.email)}
+              tabIndex={clampedActiveIndex === i + 1 ? 0 : -1}
+              onFocus={() => setActiveIndex(i + 1)}
               onClick={() => toggle(c.email)}
               onKeyDown={(e) => handleOptionKeyDown(e, i + 1)}
               className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
