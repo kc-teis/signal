@@ -200,7 +200,7 @@ export function FilterModal({
             {SORT_OPTIONS.map((opt) => (
               <label
                 key={opt.value}
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 ${
                   sort === opt.value ? "border-primary bg-primary/5" : "hover:bg-accent"
                 }`}
               >
@@ -210,7 +210,7 @@ export function FilterModal({
                   value={opt.value}
                   checked={sort === opt.value}
                   onChange={() => onSortChange(opt.value)}
-                  className="mt-0.5 accent-primary"
+                  className="mt-0.5 accent-primary focus-visible:outline-none"
                 />
                 <span>
                   <span className="block text-sm font-semibold">{opt.label}</span>
