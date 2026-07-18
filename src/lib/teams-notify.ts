@@ -82,7 +82,7 @@ function buildNewSubmissionCard(link: NewSubmissionNotification) {
           actions: [
             {
               type: "Action.OpenUrl",
-              title: "View in Signal",
+              title: "View in The Signal",
               url: permalink,
             },
           ],
@@ -105,7 +105,7 @@ function buildRemovedNotice(link: RemovedSubmissionNotification) {
           body: [
             {
               type: "TextBlock",
-              text: `🗑️ *${link.title ?? "Untitled"}* was removed from Signal`,
+              text: `🗑️ *${link.title ?? "Untitled"}* was removed from The Signal`,
               wrap: true,
               isSubtle: true,
             },
